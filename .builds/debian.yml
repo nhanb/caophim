@@ -1,0 +1,17 @@
+image: debian/buster
+
+secrets:
+  - 42bb7f41-956c-4cb8-a685-2fa6e59f5f14
+
+tasks:
+  - mirror-to-github: |
+      cd ~/caophim
+      mkdir -p ~/.ssh
+      echo -e "\nHost github.com\n  IdentityFile /home/build/.ssh/42bb7f41-956c-4cb8-a685-2fa6e59f5f14\n  IdentitiesOnly yes\n  BatchMode yes" >> ~/.ssh/config
+      echo "github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==" >> ~/.ssh/known_hosts
+      git remote add github git@github.com:nhanb/caophim.git
+      git push -f github '*:*' --prune --follow-tags
+
+  - test: |
+      cd caophim
+      echo TODO
