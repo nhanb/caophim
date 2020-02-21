@@ -9,6 +9,6 @@ Goals:
 
 ```sh
 sudo pacman -S entr
-ls src/* | entr -rc nimble run caophim
+ls src/* | entr -rc nimble run --verbose caophim
 xdg-open http://localhost:5000
 ```
