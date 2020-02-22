@@ -3,6 +3,9 @@ image: debian/buster
 secrets:
   - 42bb7f41-956c-4cb8-a685-2fa6e59f5f14
 
+packages:
+  - curl
+
 tasks:
   - mirror-to-github: |
       cd ~/caophim
@@ -12,6 +15,12 @@ tasks:
       git remote add github git@github.com:nhanb/caophim.git
       git push -f github '*:*' --prune --follow-tags
 
-  - test: |
-      cd caophim
-      echo TODO
+  - build: |
+      curl 'https://nim-lang.org/download/nim-1.0.6-linux_x64.tar.xz' -o nim.tar.xz
+      tar -xf nim.tar.xz
+      cd nim-1.0.6
+      sudo sh install.sh /usr/bin
+      sudo cp bin/* /usr/bin
+
+      cd ~/caophim
+      nimble install --accept
