@@ -1,4 +1,5 @@
-import db_sqlite, sequtils, sugar, options
+import db_sqlite, sequtils, sugar, options, strformat, strutils, asyncdispatch
+import imgformat
 
 const DB_FILE_NAME = "db.sqlite3"
 
@@ -8,9 +9,9 @@ type
     name*: string
 
 type
-  Thread* = object
+  Topic* = object
     id*: string
-    pic_url*: string
+    picFormat*: ImageFormat
     content*: string
     created_at*: string
     board_slug*: string
@@ -31,9 +32,8 @@ proc createDb*(db: DbConn)=
   """)
 
   db.exec(sql"""
-  CREATE TABLE IF NOT EXISTS thread (
-    id int NOT NULL PRIMARY KEY,
-    pic_url text NOT NULL,
+  CREATE TABLE IF NOT EXISTS topic (
+    pic_format text NOT NULL,
     content text NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -44,13 +44,12 @@ proc createDb*(db: DbConn)=
 
   db.exec(sql"""
   CREATE TABLE IF NOT EXISTS reply (
-    id int NOT NULL PRIMARY KEY,
-    pic_url text,
+    pic_format text,
     content text,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    thread_id int NOT NULL,
-    FOREIGN KEY (thread_id) REFERENCES thread(id) ON DELETE CASCADE
+    topic_id int NOT NULL,
+    FOREIGN KEY (topic_id) REFERENCES topic(rowid) ON DELETE CASCADE
   );
   """)
 
@@ -71,15 +70,35 @@ proc getBoards*(db: DbConn): seq[Board] =
   return boards
 
 
-proc createThread*(db: DbConn,
-                   board_slug: string,
-                   pic_url: string,
-                   content: string) =
-  db.exec(sql"""
-  INSERT INTO thread(board_slug, pic_url, content)
-  VALUES (?, ?, ?);
-  """, board_slug, pic_url, content)
+proc createTopic*(
+  db: DbConn,
+  savePic: proc(blob: string, filename: string): Future[void],
+  boardSlug: string,
+  pic: string, # but is actually binary data
+  picFormat: ImageFormat,
+  content: string
+): Future[Option[int]] {.async.} =
+  # Wrap the whole thing inside a transaction so if savePic() fails the topic
+  # won't be committed to db:
+  db.exec(sql"BEGIN TRANSACTION;")
+  try:
+    # First insert into db with so we can get a topic ID:
+    db.exec(sql"""
+    INSERT INTO topic(board_slug, pic_format, content)
+    VALUES (?, ?, ?);
+    """, boardSlug, $picFormat, content)
+    let topicId: string = db.getRow(sql"SELECT last_insert_rowid();")[0]
+    echo fmt"Inserted topic id {topicId}"
 
+    # Now save to disk, using topic ID as filename
+    await savePic(pic, fmt"{topicId}.{$picFormat}")
+
+    db.exec(sql"COMMIT;")
+    return some(topicId.parseInt())
+
+  except:
+    db.exec(sql"ROLLBACK;")
+    return none(int)
 
 proc getBoard*(db: DbConn, slug: string): Option[Board] =
   let row = db.getRow(sql"SELECT name FROM board WHERE slug = ?;", slug)
@@ -90,16 +109,38 @@ proc getBoard*(db: DbConn, slug: string): Option[Board] =
     return some(Board(slug: slug, name: name))
 
 
-proc getThreads*(db: DbConn, board: Board): seq[Thread] =
+proc getTopics*(db: DbConn, board: Board): seq[Topic] =
   let rows = db.getAllRows(sql"""
-  SELECT id, pic_url, content, created_at FROM thread WHERE board_slug = ?;
+  SELECT rowid, pic_format, content, created_at
+  FROM topic
+  WHERE board_slug = ?
+  ORDER BY rowid DESC;
   """, board.slug)
-  return rows.map(proc(r: seq[string]) : Thread =
-    Thread(
+  return rows.map(proc(r: seq[string]) : Topic =
+    Topic(
       id: r[0],
-      pic_url: r[1],
+      picFormat: parseEnum[ImageFormat](r[1]),
       content: r[2],
       created_at: r[3],
       board_slug: board.slug
     )
   )
+
+
+proc getTopic*(db: DbConn, board: Board, topicId: int): Option[Topic] =
+  let r = db.getRow(sql"""
+  SELECT rowid, pic_format, content, created_at
+  FROM topic
+  WHERE board_slug = ?
+  AND rowid = ?;
+  """, board.slug, topicId)
+  if r[0] == "":
+    return none(Topic)
+  else:
+    return some(Topic(
+      id: r[0],
+      picFormat: parseEnum[ImageFormat](r[1]),
+      content: r[2],
+      created_at: r[3],
+      board_slug: board.slug
+    ))
