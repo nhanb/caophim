@@ -15,3 +15,6 @@ skipExt       = @["nim"]
 
 requires "nim >= 1.0.6"
 requires "jester >= 0.4.3"
+# I'm only using karax for its backend html generation features.
+# No fancy frontend stuff is used.
+requires "karax >= 1.1.0"

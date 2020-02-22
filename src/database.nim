@@ -1,4 +1,4 @@
-import db_sqlite, sequtils, sugar
+import db_sqlite, sequtils, sugar, options
 
 const DB_FILE_NAME = "db.sqlite3"
 
@@ -6,6 +6,14 @@ type
   Board* = object
     slug*: string
     name*: string
+
+type
+  Thread* = object
+    id*: string
+    pic_url*: string
+    content*: string
+    created_at*: string
+    board_slug*: string
 
 
 proc getDbConn*(): DbConn =
@@ -71,3 +79,27 @@ proc createThread*(db: DbConn,
   INSERT INTO thread(board_slug, pic_url, content)
   VALUES (?, ?, ?);
   """, board_slug, pic_url, content)
+
+
+proc getBoard*(db: DbConn, slug: string): Option[Board] =
+  let row = db.getRow(sql"SELECT name FROM board WHERE slug = ?;", slug)
+  let name = row[0]
+  if name == "":
+    return none(Board)
+  else:
+    return some(Board(slug: slug, name: name))
+
+
+proc getThreads*(db: DbConn, board: Board): seq[Thread] =
+  let rows = db.getAllRows(sql"""
+  SELECT id, pic_url, content, created_at FROM thread WHERE board_slug = ?;
+  """, board.slug)
+  return rows.map(proc(r: seq[string]) : Thread =
+    Thread(
+      id: r[0],
+      pic_url: r[1],
+      content: r[2],
+      created_at: r[3],
+      board_slug: board.slug
+    )
+  )
