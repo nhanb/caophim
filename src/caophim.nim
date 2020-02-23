@@ -30,11 +30,15 @@ routes:
 
   get "/":
     let boards: seq[Board] = db.getBoards()
-    let body = buildHtml(tdiv(class="home-container")):
-      for board in boards:
-        tdiv():
-          a(href=fmt"/{board.slug}/"): text fmt"/{board.slug}/"
-          text fmt" - {board.name}"
+    let body = buildHtml(tdiv):
+      h1():
+        a(href="/"): text "caophim"
+        text "/"
+      tdiv(class="boards"):
+        for board in boards:
+          tdiv():
+            a(href=fmt"/{board.slug}/"): text fmt"/{board.slug}/"
+            text fmt" - {board.name}"
     resp wrapHtml(body)
 
 
@@ -50,10 +54,12 @@ routes:
 
     let body = buildHtml(tdiv):
 
-      h1(): text fmt"/{slug}/ - {board.name}"
+      h1():
+        a(href="/"): text "caophim"
+        text fmt"/{slug}/ - {board.name}"
 
       if len(topics) == 0:
-        text "No topics yet."
+        tdiv(): text "No topics yet."
       else:
         for topic in topics:
           renderTopic(topic)
@@ -140,9 +146,20 @@ routes:
     let replies = db.getReplies(topic)
     topic.numReplies = some(len(replies))
 
+    let content = topic.content
+    var titleText = content[0..min(80, content.len - 1)]
+    if "\c\n" in titleText:
+      titleText = titleText[0..titleText.find("\c\n")-1]
+    elif titleText.len < content.len:
+      titleText.add("...")
+
 
     let body = buildHtml(tdiv):
-      h1(): text fmt"/{slug}/ - {boardOption.get().name}"
+      h1():
+        a(href="/"): text "caophim"
+        text "/"
+        a(href=fmt"/{slug}/"): text fmt"{slug}"
+        text fmt"/{topic.id}/ - {titleText}"
       renderTopic(topic)
       renderReplies(replies)
       form(
@@ -156,13 +173,6 @@ routes:
         label(): text "Pic:"
         input(`type`="file", name="pic", id="create-reply-pic")
         button(`type`="submit"): text "Reply"
-
-    let content = topic.content
-    var titleText = content[0..min(80, content.len - 1)]
-    if "\c\n" in titleText:
-      titleText = titleText[0..titleText.find("\c\n")-1]
-    elif titleText.len < content.len:
-      titleText.add("...")
 
     resp wrapHtml(body, titleText)
 
