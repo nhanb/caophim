@@ -1,4 +1,4 @@
-import db_sqlite, sequtils, sugar, options, strformat, strutils, asyncdispatch
+import db_sqlite, sequtils, sugar, options, strutils, asyncdispatch
 import imgformat
 
 const DB_FILE_NAME = "db.sqlite3"
@@ -72,33 +72,22 @@ proc getBoards*(db: DbConn): seq[Board] =
 
 proc createTopic*(
   db: DbConn,
-  savePic: proc(blob: string, filename: string): Future[void],
   boardSlug: string,
   pic: string, # but is actually binary data
   picFormat: ImageFormat,
   content: string
-): Future[Option[int]] {.async.} =
-  # Wrap the whole thing inside a transaction so if savePic() fails the topic
-  # won't be committed to db:
-  db.exec(sql"BEGIN TRANSACTION;")
-  try:
-    # First insert into db with so we can get a topic ID:
-    db.exec(sql"""
-    INSERT INTO topic(board_slug, pic_format, content)
-    VALUES (?, ?, ?);
-    """, boardSlug, $picFormat, content)
-    let topicId: string = db.getRow(sql"SELECT last_insert_rowid();")[0]
-    echo fmt"Inserted topic id {topicId}"
+): Future[int] {.async.} =
+  db.exec(sql"""
+  INSERT INTO topic(board_slug, pic_format, content)
+  VALUES (?, ?, ?);
+  """, boardSlug, $picFormat, content)
+  let topicId: string = db.getRow(sql"SELECT last_insert_rowid();")[0]
+  return topicId.parseInt()
 
-    # Now save to disk, using topic ID as filename
-    await savePic(pic, fmt"{topicId}.{$picFormat}")
 
-    db.exec(sql"COMMIT;")
-    return some(topicId.parseInt())
+proc deleteTopic*(db: DbConn, topicId: int) =
+  db.exec(sql"DELETE FROM topic WHERE rowid = ?;", topicId)
 
-  except:
-    db.exec(sql"ROLLBACK;")
-    return none(int)
 
 proc getBoard*(db: DbConn, slug: string): Option[Board] =
   let row = db.getRow(sql"SELECT name FROM board WHERE slug = ?;", slug)
@@ -114,7 +103,8 @@ proc getTopics*(db: DbConn, board: Board): seq[Topic] =
   SELECT rowid, pic_format, content, created_at
   FROM topic
   WHERE board_slug = ?
-  ORDER BY rowid DESC;
+  ORDER BY rowid DESC
+  LIMIT 50;
   """, board.slug)
   return rows.map(proc(r: seq[string]) : Topic =
     Topic(

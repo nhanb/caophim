@@ -1,4 +1,6 @@
+import strformat, strutils
 import karax / [karaxdsl, vdom]
+import database
 
 
 proc wrapHtml*(element: VNode, pageTitle: string = ""): string =
@@ -15,3 +17,22 @@ proc wrapHtml*(element: VNode, pageTitle: string = ""): string =
       element
 
   return "<!DOCTYPE html>\n" & $html
+
+
+proc renderTopic*(topic: Topic): VNode =
+  let picUrl = fmt"/pics/{topic.id}.{topic.pic_format}"
+  return buildHtml(tdiv(class="topic")):
+    a(href=picUrl, class="topic-pic-anchor"):
+      img(class="topic-pic", src=picUrl)
+    tdiv(class="topic-header"):
+      a(href=fmt"/{topic.boardSlug}/{topic.id}/"):
+        text "[" & topic.id & "]"
+      time(datetime=topic.createdAt): text topic.createdAt
+    tdiv(class="topic-content"):
+      # TODO: consider storing pre-processed paragraphs instead
+      # of splitting on every view here
+      for paragraph in topic.content.split("\c\n\c\n"):
+        p():
+          for line in paragraph.split("\c\n"):
+            text line
+            verbatim("<br/>")

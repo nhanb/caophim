@@ -17,7 +17,7 @@ Goals:
 
 ```sh
 sudo pacman -S entr
-ls src/* | entr -rc nimble run --verbose caophim
+find src -type f -name '*.nim' | entr -rc nimble run --verbose caophim
 xdg-open http://localhost:5000
 ```
 

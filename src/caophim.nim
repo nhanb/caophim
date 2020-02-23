@@ -50,18 +50,7 @@ routes:
         text "No topics yet."
       else:
         for topic in topics:
-          let picUrl = fmt"/pics/{topic.id}.{topic.pic_format}"
-          tdiv(class="topic"):
-            a(href=picUrl):
-              img(class="topic-pic", src=picUrl)
-            tdiv(class="topic-content"):
-              # TODO: consider storing pre-processed paragraphs instead
-              # of splitting on every view here
-              for paragraph in topic.content.split("\c\n\c\n"):
-                p():
-                  for line in paragraph.split("\c\n"):
-                    text line
-                    br()
+          renderTopic(topic)
 
       form(
         class="create-topic-form",
@@ -96,24 +85,27 @@ routes:
       ti = TopicInput(
         pic: pic,
         picFormat: picFormat,
-        content: request.formData["content"].body,
+        content: request.formData["content"].body.strip(),
         boardSlug: slug
       )
     except:
       resp Http400, "Invalid form input."
       return
 
-    let topicIdOption = await db.createTopic(
-      savePic,
+    let topicId = await db.createTopic(
       ti.boardSlug,
       ti.pic,
       ti.picFormat,
       ti.content
     )
-    if topicIdOption.isNone():
+    try:
+      await savePic(ti.pic, fmt"{topicId}.{ti.picFormat}")
+    except:
+      db.deleteTopic(topicId)
       resp Http500, "Failed to create topic."
-    else:
-      redirect fmt"/{slug}/{topicIdOption.get()}/"
+      return
+
+    redirect fmt"/{slug}/{topicId}/"
 
 
   get "/@board_slug/@topic_id/":
@@ -129,9 +121,32 @@ routes:
     except ValueError:
       resp Http404, "Topic not found"
       return
+
     let topicOption = db.getTopic(boardOption.get(), topicId)
     if topicOption.isNone():
       resp Http404, "Topic not found."
       return
 
-    resp wrapHtml(text $topicOption.get())
+    let topic = topicOption.get()
+    let body = buildHtml(tdiv):
+      renderTopic(topic)
+      form(
+        class="create-reply-form",
+        action=fmt"/{slug}/{topic.id}/",
+        `method`="POST",
+        enctype="multipart/form-data"
+      ):
+        label(`for`="create-reply-content"): text "Reply:"
+        textarea(name="content", id="create-reply-content", rows="7", required="true"): text ""
+        label(): text "Pic:"
+        input(`type`="file", name="pic", id="create-reply-pic")
+        button(`type`="submit"): text "Reply"
+
+    let content = topic.content
+    var titleText = content[0..min(80, content.len - 1)]
+    if "\c\n" in titleText:
+      titleText = titleText[0..titleText.find("\c\n")-1]
+    elif titleText.len < content.len:
+      titleText.add("...")
+
+    resp wrapHtml(body, titleText)
