@@ -9,10 +9,16 @@ type
     pic: string
     picFormat: ImageFormat
     content: string
-    board_slug: string
+    boardSlug: string
+
+  ReplyInput = object
+    pic: Option[string]
+    picFormat: Option[ImageFormat]
+    content: string
+    topicId: int64
 
 
-createPicsDir()
+createPicsDirs()
 
 
 let db = getDbConn()
@@ -77,6 +83,9 @@ routes:
     var ti: TopicInput
     try:
       # TODO: move this into a "deserializer" proc
+      # Also, don't rely on the catch-all exception handler to catch stuff like
+      # index out of bounds error:
+      # https://nim-lang.org/araq/gotobased_exceptions.html
       let pic: string = request.formData["pic"].body
       let picFormat: ImageFormat = getPicFormat(pic[0..IMGFORMAT_MAX_BYTES_USED])
       if picFormat == ImageFormat.Unsupported:
@@ -92,10 +101,10 @@ routes:
       resp Http400, "Invalid form input."
       return
 
-    let topicId = await db.createTopic(
+    let topicId = db.createTopic(
       ti.boardSlug,
       ti.pic,
-      ti.picFormat,
+      $ti.picFormat,
       ti.content
     )
     try:
@@ -115,7 +124,7 @@ routes:
       resp Http404, "Board not found."
       return
 
-    var topicId: int
+    var topicId: int64
     try:
       topicId = (@"topic_id").parseInt()
     except ValueError:
@@ -127,12 +136,18 @@ routes:
       resp Http404, "Topic not found."
       return
 
-    let topic = topicOption.get()
+    var topic = topicOption.get()
+    let replies = db.getReplies(topic)
+    topic.numReplies = some(len(replies))
+
+
     let body = buildHtml(tdiv):
+      h1(): text fmt"/{slug}/ - {boardOption.get().name}"
       renderTopic(topic)
+      renderReplies(replies)
       form(
         class="create-reply-form",
-        action=fmt"/{slug}/{topic.id}/",
+        action=fmt"/reply/{topic.id}/",
         `method`="POST",
         enctype="multipart/form-data"
       ):
@@ -150,3 +165,63 @@ routes:
       titleText.add("...")
 
     resp wrapHtml(body, titleText)
+
+
+  post "/reply/@topic_id/":
+    let topicIdStr = @"topic_id"
+    var topicId: int64
+    try:
+      topicId = topicIdStr.parseInt()
+    except ValueError:
+      resp Http400, "Invalid topic ID."
+      return
+
+    if not db.topicExists(topicId):
+      resp Http400, "Topic not found."
+      return
+
+    var ri: ReplyInput
+    try:
+      # TODO: move this into a "deserializer" proc
+      # Also, don't rely on the catch-all exception handler to catch stuff like
+      # index out of bounds error:
+      # https://nim-lang.org/araq/gotobased_exceptions.html
+      var picOpt: Option[string]
+      var picFormatOpt: Option[ImageFormat]
+      if request.formData["pic"].body == "":
+        picOpt = none(string)
+        picFormatOpt = none(ImageFormat)
+      else:
+        let pic = request.formData["pic"].body
+        let picFormat = getPicFormat(pic[0..IMGFORMAT_MAX_BYTES_USED])
+        if picFormat == ImageFormat.Unsupported:
+          resp Http400, "Unsupported image format."
+          return
+        picOpt = some(pic)
+        picFormatOpt = some(picFormat)
+      ri = ReplyInput(
+        pic: picOpt,
+        picFormat: picFormatOpt,
+        content: request.formData["content"].body.strip(),
+        topicId: topicId
+      )
+    except:
+      resp Http400, "Invalid form input."
+      return
+
+    let replyId: int64 = db.createReply(
+      ri.topicId,
+      if ri.picFormat.isNone(): "" else: $ri.picFormat.get(),
+      ri.content
+    )
+
+    if ri.pic.isSome():
+      try:
+        await saveReplyPic(ri.pic.get(), fmt"{replyId}.{ri.picFormat.get()}")
+      except:
+        db.deleteTopic(topicId)
+        resp Http500, "Failed to create topic."
+        return
+
+    let boardSlug = db.getBoardSlugFromTopicId(topicId)
+    redirect fmt"/{boardSlug}/{topicId}/#{replyId}"

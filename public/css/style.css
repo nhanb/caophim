@@ -13,7 +13,7 @@ body {
 }
 h1 {
   font-size: 2rem;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   font-weight: bold;
 }
 input[type="file"] {
@@ -27,11 +27,11 @@ textarea {
   border: var(--border);
 }
 form {
-  border: 1px solid cadetblue;
+  border: var(--border);
+  background-color: white;
   margin: 20px 0;
   padding: 10px;
   max-width: 800px;
-  background-color: aliceblue;
 
   display: grid;
   grid-template-columns: auto 1fr;
@@ -65,9 +65,8 @@ strong {
   grid-gap: 10px;
 }
 
-.topic {
-  background-color: bisque;
-  border: 1px solid chocolate;
+.topic,
+.reply {
   padding: 3px;
   margin: 10px 0;
 
@@ -79,32 +78,55 @@ strong {
     "pic header"
     "pic content";
 }
-.topic-pic-anchor {
+.topic-pic-anchor,
+.reply-pic-anchor {
   width: 200px;
   grid-area: pic;
   align-self: start;
 }
-.topic-pic-anchor > img {
+.topic-pic-anchor > img,
+.reply-pic-anchor > img {
   display: block;
   width: 100%;
   border: var(--border);
 }
-.topic-header {
+.topic-header,
+.reply-header {
   grid-area: header;
   align-self: start;
 }
-.topic-header a {
+.topic-header a,
+.reply-header a {
   font-size: 110%;
   text-decoration: none;
 }
-.topic-header time {
+.topic-header,
+.reply-header {
   font-size: 90%;
 }
-.topic-content {
+.topic-content,
+.reply-content {
   grid-area: content;
   align-self: stretch;
   padding-bottom: 3px;
+  padding-right: 5px;
+}
+.topic-content > p,
+.reply-content > p {
+  margin-bottom: 1rem;
+}
+.topic-content > p:last-of-type,
+.reply-content > p:last-of-type {
+  margin-bottom: 0;
+}
 
-  display: grid;
-  grid-gap: 1rem;
+.topic,
+.create-topic-form {
+  background-color: bisque;
+  border: 1px solid chocolate;
+}
+.reply,
+.create-reply-form {
+  background-color: aliceblue;
+  border: 1px solid bisque;
 }
