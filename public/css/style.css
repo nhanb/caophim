@@ -24,6 +24,9 @@ h1 {
   display: inline-block;
   padding: 10px;
 }
+h2 {
+  margin: 10px 0;
+}
 input[type="file"] {
   padding: 5px;
   max-width: 400px;
@@ -87,6 +90,14 @@ strong {
   width: 200px;
   grid-area: pic;
   align-self: start;
+  text-decoration: none;
+  color: #999;
+  text-align: right;
+  font-size: 90%;
+}
+.topic-pic-anchor:hover,
+.reply-pic-anchor:hover {
+  text-decoration: none;
 }
 .topic-pic-anchor > img,
 .reply-pic-anchor > img {

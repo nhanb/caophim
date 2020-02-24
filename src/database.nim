@@ -67,7 +67,7 @@ proc seedBoards*(db: DbConn) =
   db.exec(sql"""
   INSERT INTO board(slug, name)
   VALUES
-    ('dev', 'devlet banters'),
+    ('dev', 'devlet support group'),
     ('rand', 'anything goes')
   ON CONFLICT(slug) DO UPDATE SET name=excluded.name;
   """)

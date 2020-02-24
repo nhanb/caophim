@@ -11,7 +11,7 @@ Goals:
 
 - Simple (and hopefully fun) to develop: prioritize correctness & simplicity
   over performance in general. Nim + sqlite3 is plenty fast already, and no
-  your shitty Mongolian basket weaving forum is not "web scale".
+  your shitty Mongolian basket weaving forum does not need to be "web scale".
 
 # Dev
 

@@ -34,6 +34,7 @@ routes:
       h1():
         a(href="/"): text "caophim"
         text "/"
+      h2(): text "Pick your poison:"
       tdiv(class="boards"):
         for board in boards:
           tdiv():
@@ -59,8 +60,13 @@ routes:
         text fmt"/{slug}/ - {board.name}"
 
       if len(topics) == 0:
-        tdiv(): text "No topics yet."
+        h2(): text "No topics yet."
       else:
+        h2():
+          text fmt"Showing "
+          strong(): text fmt"{topics.len}"
+          text if topics.len == 1: " topic" else: " topics"
+          text fmt" in /{slug}/"
         for topic in topics:
           renderTopic(topic)
 
@@ -70,8 +76,14 @@ routes:
         `method`="POST",
         enctype="multipart/form-data"
       ):
-        label(`for`="create-topic-content"): text "Content:"
-        textarea(name="content", id="create-topic-content", rows="7", required="true"): text ""
+        label(`for`="create-topic-content"): text "New topic:"
+        textarea(
+          name="content",
+          id="create-topic-content",
+          rows="7",
+          required="true",
+          placeholder="Create new topic here"
+        ): text ""
         label(): text "Pic:"
         input(`type`="file", name="pic", id="create-topic-pic", required="true")
         button(`type`="submit"): text "Create topic"
@@ -169,8 +181,14 @@ routes:
         enctype="multipart/form-data"
       ):
         label(`for`="create-reply-content"): text "Reply:"
-        textarea(name="content", id="create-reply-content", rows="7", required="true"): text ""
-        label(): text "Pic:"
+        textarea(
+          name="content",
+          id="create-reply-content",
+          rows="7",
+          required="true",
+          placeholder="Reply here"
+        ): text ""
+        label(): text "Pic (optional):"
         input(`type`="file", name="pic", id="create-reply-pic")
         button(`type`="submit"): text "Reply"
 

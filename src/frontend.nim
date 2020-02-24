@@ -52,7 +52,7 @@ proc renderReply(reply: Reply): VNode =
       a(href=picUrl, class="reply-pic-anchor"):
         img(class="reply-pic", src=picUrl)
     else:
-      a(class="reply-pic-anchor")
+      a(class="reply-pic-anchor"): text "text only"
 
     tdiv(class="reply-header"):
       a(href=fmt"#{reply.id}", id = $reply.id):
