@@ -173,7 +173,7 @@ routes:
         a(href=fmt"/{slug}/"): text fmt"{slug}"
         text fmt"/{topic.id}/ - {titleText}"
       renderTopic(topic)
-      renderReplies(replies)
+      renderReplies(replies, topic=topic)
       form(
         class="create-reply-form",
         action=fmt"/reply/{topic.id}/",

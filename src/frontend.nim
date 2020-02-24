@@ -1,4 +1,4 @@
-import strformat, strutils, options
+import strformat, strutils, options, re
 import karax / [karaxdsl, vdom]
 import database
 
@@ -19,13 +19,41 @@ proc wrapHtml*(element: VNode, pageTitle: string = ""): string =
   return "<!DOCTYPE html>\n" & $html
 
 
+# TODO: consider storing pre-processed paragraphs and links instead
+# of processing on every view here
+proc renderContent(class: string, content: string, topic: Topic): VNode =
+
+  # If line is in "quote" format, render link to quoted topic/reply
+  proc renderLine(line: string): VNode =
+    buildHtml(span):
+      if line.match(re(r"^>>\d+$")): # quoting topic
+        let topicId = line[2..^1]
+        if topicId == topic.id:
+          a(href="#topic-top"): text line
+        else:
+          a(href=fmt"/{topic.boardSlug}/{topicId}/"): text line
+      elif line.match(re(r"^>>\d+/\d+$")): # quoting reply
+        let topicId = line[2..line.find("/")-1]
+        let replyId = line[line.find("/")+1..^1]
+        a(href=fmt"/{topic.boardSlug}/{topicId}/#{replyId}"): text line
+      else:
+        text line
+
+  return buildHtml(tdiv(class=class)):
+      for paragraph in content.split("\c\n\c\n"):
+        p():
+          for line in paragraph.split("\c\n"):
+            renderLine(line)
+            verbatim("<br/>")
+
+
 proc renderTopic*(topic: Topic): VNode =
   let picUrl = fmt"/pics/{topic.id}.{topic.pic_format}"
   return buildHtml(tdiv(class="topic")):
     a(href=picUrl, class="topic-pic-anchor"):
       img(class="topic-pic", src=picUrl)
     tdiv(class="topic-header"):
-      a(href=fmt"/{topic.boardSlug}/{topic.id}/"):
+      a(href=fmt"/{topic.boardSlug}/{topic.id}/", id="topic-top"):
         text "[" & topic.id & "]"
       time(datetime=topic.createdAt): text topic.createdAt
       if topic.numReplies.isSome():
@@ -35,17 +63,10 @@ proc renderTopic*(topic: Topic): VNode =
           text fmt"{num} "
           if num == 1: text "reply"
           else: text "replies"
-    tdiv(class="topic-content"):
-      # TODO: consider storing pre-processed paragraphs instead
-      # of splitting on every view here
-      for paragraph in topic.content.split("\c\n\c\n"):
-        p():
-          for line in paragraph.split("\c\n"):
-            text line
-            verbatim("<br/>")
+    renderContent("topic-content", topic.content, topic)
 
 
-proc renderReply(reply: Reply): VNode =
+proc renderReply(reply: Reply, topic: Topic): VNode =
   return buildHtml(tdiv(class="reply")):
     if reply.picFormat.isSome():
       let picUrl = fmt"/pics/r/{reply.id}.{reply.pic_format.get()}"
@@ -58,19 +79,11 @@ proc renderReply(reply: Reply): VNode =
       a(href=fmt"#{reply.id}", id = $reply.id):
         text fmt"[{reply.topicId}/{reply.id}]"
       time(datetime=reply.createdAt): text reply.createdAt
-    tdiv(class="reply-content"):
-      # TODO: consider storing pre-processed paragraphs instead
-      # of splitting on every view here
-      for paragraph in reply.content.split("\c\n\c\n"):
-        p():
-          for line in paragraph.split("\c\n"):
-            text line
-            verbatim("<br/>")
+    renderContent("reply-content", reply.content, topic)
 
-
-proc renderReplies*(replies: seq[Reply]): VNode =
+proc renderReplies*(replies: seq[Reply], topic: Topic): VNode =
   return buildHtml(tdiv(class="replies")):
     for reply in replies:
-      renderReply(reply)
+      renderReply(reply, topic)
     if len(replies) == 0:
       p(): text "No replies yet."
