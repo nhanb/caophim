@@ -21,21 +21,17 @@ proc wrapHtml*(element: VNode, pageTitle: string = ""): string =
 
 # TODO: consider storing pre-processed paragraphs and links instead
 # of processing on every view here
-proc renderContent(class: string, content: string, topic: Topic): VNode =
+proc renderContent(class: string, content: string, thread: Thread): VNode =
 
-  # If line is in "quote" format, render link to quoted topic/reply
+  # If line is in "quote" format, render link to quoted thread/reply
   proc renderLine(line: string): VNode =
     buildHtml(span):
-      if line.match(re(r"^>>\d+$")): # quoting topic
-        let topicId = line[2..^1]
-        if topicId == topic.id:
-          a(href="#topic-top"): text line
+      if line.match(re(r"^>>\d+$")): # quoting thread
+        let threadId = line[2..^1]
+        if threadId == thread.id:
+          a(href="#thread-top"): text line
         else:
-          a(href=fmt"/{topic.boardSlug}/{topicId}/"): text line
-      elif line.match(re(r"^>>\d+/\d+$")): # quoting reply
-        let topicId = line[2..line.find("/")-1]
-        let replyId = line[line.find("/")+1..^1]
-        a(href=fmt"/{topic.boardSlug}/{topicId}/#{replyId}"): text line
+          a(class="cross-link", href=fmt"/{thread.boardSlug}/{threadId}/"): text line
       else:
         text line
 
@@ -47,29 +43,29 @@ proc renderContent(class: string, content: string, topic: Topic): VNode =
             verbatim("<br/>")
 
 
-proc renderTopic*(topic: Topic): VNode =
-  let picUrl = fmt"/pics/{topic.id}.{topic.pic_format}"
-  return buildHtml(tdiv(class="topic")):
-    a(href=picUrl, class="topic-pic-anchor"):
-      img(class="topic-pic", src=picUrl)
-    tdiv(class="topic-header"):
-      a(href=fmt"/{topic.boardSlug}/{topic.id}/", id="topic-top"):
-        text "[" & topic.id & "]"
-      time(datetime=topic.createdAt): text topic.createdAt
-      if topic.numReplies.isSome():
-        let num = topic.numReplies.get()
+proc renderThread*(thread: Thread): VNode =
+  let picUrl = fmt"/pics/{thread.id}.{thread.pic_format}"
+  return buildHtml(tdiv(class="thread")):
+    a(href=picUrl, class="thread-pic-anchor"):
+      img(class="thread-pic", src=picUrl)
+    tdiv(class="thread-header"):
+      a(href=fmt"/{thread.boardSlug}/{thread.id}/", id="thread-top"):
+        text "[" & thread.id & "]"
+      time(datetime=thread.createdAt): text thread.createdAt
+      if thread.numReplies.isSome():
+        let num = thread.numReplies.get()
         text ", "
         span():
           text fmt"{num} "
           if num == 1: text "reply"
           else: text "replies"
-    renderContent("topic-content", topic.content, topic)
+    renderContent("thread-content", thread.content, thread)
 
 
-proc renderReply(reply: Reply, topic: Topic): VNode =
+proc renderReply(reply: Reply, thread: Thread): VNode =
   return buildHtml(tdiv(class="reply")):
     if reply.picFormat.isSome():
-      let picUrl = fmt"/pics/r/{reply.id}.{reply.pic_format.get()}"
+      let picUrl = fmt"/pics/{reply.id}.{reply.pic_format.get()}"
       a(href=picUrl, class="reply-pic-anchor"):
         img(class="reply-pic", src=picUrl)
     else:
@@ -77,13 +73,13 @@ proc renderReply(reply: Reply, topic: Topic): VNode =
 
     tdiv(class="reply-header"):
       a(href=fmt"#{reply.id}", id = $reply.id):
-        text fmt"[{reply.topicId}/{reply.id}]"
+        text fmt"[{reply.id}]"
       time(datetime=reply.createdAt): text reply.createdAt
-    renderContent("reply-content", reply.content, topic)
+    renderContent("reply-content", reply.content, thread)
 
-proc renderReplies*(replies: seq[Reply], topic: Topic): VNode =
+proc renderReplies*(replies: seq[Reply], thread: Thread): VNode =
   return buildHtml(tdiv(class="replies")):
     for reply in replies:
-      renderReply(reply, topic)
+      renderReply(reply, thread)
     if len(replies) == 0:
       p(): text "No replies yet."

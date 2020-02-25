@@ -72,7 +72,7 @@ strong {
   border: 1px solid green;
 }
 
-.topic,
+.thread,
 .reply {
   padding: 3px;
   margin: 10px 0;
@@ -85,7 +85,7 @@ strong {
     "pic header"
     "pic content";
 }
-.topic-pic-anchor,
+.thread-pic-anchor,
 .reply-pic-anchor {
   width: 200px;
   grid-area: pic;
@@ -95,53 +95,54 @@ strong {
   text-align: right;
   font-size: 90%;
 }
-.topic-pic-anchor:hover,
+.thread-pic-anchor:hover,
 .reply-pic-anchor:hover {
   text-decoration: none;
 }
-.topic-pic-anchor > img,
+.thread-pic-anchor > img,
 .reply-pic-anchor > img {
   display: block;
   width: 100%;
   border: var(--border);
 }
-.topic-header,
+.thread-header,
 .reply-header {
   grid-area: header;
   align-self: start;
 }
-.topic-header a,
+.thread-header a,
 .reply-header a {
   font-size: 110%;
   margin-right: 5px;
 }
-.topic-header,
+.thread-header,
 .reply-header {
   font-size: 90%;
 }
-.topic-content,
+.thread-content,
 .reply-content {
   grid-area: content;
   align-self: stretch;
   padding-bottom: 3px;
   padding-right: 5px;
 }
-.topic-content > p,
+.thread-content > p,
 .reply-content > p {
   margin-bottom: 1rem;
 }
-.topic-content > p:last-of-type,
+.thread-content > p:last-of-type,
 .reply-content > p:last-of-type {
   margin-bottom: 0;
 }
 
-.topic,
-.create-topic-form {
+.cross-link,
+.thread,
+.create-thread-form {
   background-color: bisque;
   border: 1px solid chocolate;
 }
 .reply,
 .create-reply-form {
-  background-color: papayawhip;
+  background-color: floralwhite;
   border: 1px solid burlywood;
 }

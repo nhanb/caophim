@@ -16,6 +16,7 @@ Goals:
 # Dev
 
 ```sh
+nimble install
 sudo pacman -S entr
 find src -type f -name '*.nim' | entr -rc nimble run --verbose caophim
 xdg-open http://localhost:5000

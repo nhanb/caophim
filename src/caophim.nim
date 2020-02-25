@@ -5,7 +5,7 @@ import database, frontend, imgformat
 import storage / [filesystem]
 
 type
-  TopicInput = object
+  ThreadInput = object
     pic: string
     picFormat: ImageFormat
     content: string
@@ -15,7 +15,7 @@ type
     pic: Option[string]
     picFormat: Option[ImageFormat]
     content: string
-    topicId: int64
+    threadId: int64
 
 
 createPicsDirs()
@@ -51,7 +51,7 @@ routes:
       return
 
     let board: Board = boardOption.get()
-    let topics: seq[Topic] = db.getTopics(board)
+    let threads: seq[Thread] = db.getThreads(board)
 
     let body = buildHtml(tdiv):
 
@@ -59,34 +59,34 @@ routes:
         a(href="/"): text "caophim"
         text fmt"/{slug}/ - {board.name}"
 
-      if len(topics) == 0:
-        h2(): text "No topics yet."
+      if len(threads) == 0:
+        h2(): text "No threads yet."
       else:
         h2():
           text fmt"Showing "
-          strong(): text fmt"{topics.len}"
-          text if topics.len == 1: " topic" else: " topics"
+          strong(): text fmt"{threads.len}"
+          text if threads.len == 1: " thread" else: " threads"
           text fmt" in /{slug}/"
-        for topic in topics:
-          renderTopic(topic)
+        for thread in threads:
+          renderThread(thread)
 
       form(
-        class="create-topic-form",
+        class="create-thread-form",
         action=fmt"/{slug}/",
         `method`="POST",
         enctype="multipart/form-data"
       ):
-        label(`for`="create-topic-content"): text "New topic:"
+        label(`for`="create-thread-content"): text "New thread:"
         textarea(
           name="content",
-          id="create-topic-content",
+          id="create-thread-content",
           rows="7",
           required="true",
-          placeholder="Create new topic here"
+          placeholder="Create new thread here"
         ): text ""
         label(): text "Pic:"
-        input(`type`="file", name="pic", id="create-topic-pic", required="true")
-        button(`type`="submit"): text "Create topic"
+        input(`type`="file", name="pic", id="create-thread-pic", required="true")
+        button(`type`="submit"): text "Create thread"
 
     resp wrapHtml(body, fmt"/{slug}/")
 
@@ -98,7 +98,7 @@ routes:
       resp Http404, "Board not found."
       return
 
-    var ti: TopicInput
+    var ti: ThreadInput
     try:
       # TODO: move this into a "deserializer" proc
       # Also, don't rely on the catch-all exception handler to catch stuff like
@@ -109,7 +109,7 @@ routes:
       if picFormat == ImageFormat.Unsupported:
         resp Http400, "Unsupported image format."
         return
-      ti = TopicInput(
+      ti = ThreadInput(
         pic: pic,
         picFormat: picFormat,
         content: request.formData["content"].body.strip(),
@@ -119,46 +119,46 @@ routes:
       resp Http400, "Invalid form input."
       return
 
-    let topicId = db.createTopic(
+    let threadId = db.createThread(
       ti.boardSlug,
       ti.pic,
       $ti.picFormat,
       ti.content
     )
     try:
-      await savePic(ti.pic, fmt"{topicId}.{ti.picFormat}")
+      await savePic(ti.pic, fmt"{threadId}.{ti.picFormat}")
     except:
-      db.deleteTopic(topicId)
-      resp Http500, "Failed to create topic."
+      db.deleteThread(threadId)
+      resp Http500, "Failed to create thread."
       return
 
-    redirect fmt"/{slug}/{topicId}/"
+    redirect fmt"/{slug}/{threadId}/"
 
 
-  get "/@board_slug/@topic_id/":
+  get "/@board_slug/@thread_id/":
     let slug = @"board_slug"
     let boardOption = db.getBoard(slug)
     if boardOption.isNone():
       resp Http404, "Board not found."
       return
 
-    var topicId: int64
+    var threadId: int64
     try:
-      topicId = (@"topic_id").parseInt()
+      threadId = (@"thread_id").parseInt()
     except ValueError:
-      resp Http404, "Topic not found"
+      resp Http404, "Thread not found"
       return
 
-    let topicOption = db.getTopic(boardOption.get(), topicId)
-    if topicOption.isNone():
-      resp Http404, "Topic not found."
+    let threadOption = db.getThread(boardOption.get(), threadId)
+    if threadOption.isNone():
+      resp Http404, "Thread not found."
       return
 
-    var topic = topicOption.get()
-    let replies = db.getReplies(topic)
-    topic.numReplies = some(len(replies))
+    var thread = threadOption.get()
+    let replies = db.getReplies(thread)
+    thread.numReplies = some(len(replies))
 
-    let content = topic.content
+    let content = thread.content
     var titleText = content[0..min(80, content.len - 1)]
     if "\c\n" in titleText:
       titleText = titleText[0..titleText.find("\c\n")-1]
@@ -171,12 +171,12 @@ routes:
         a(href="/"): text "caophim"
         text "/"
         a(href=fmt"/{slug}/"): text fmt"{slug}"
-        text fmt"/{topic.id}/ - {titleText}"
-      renderTopic(topic)
-      renderReplies(replies, topic=topic)
+        text fmt"/{thread.id}/ - {titleText}"
+      renderThread(thread)
+      renderReplies(replies, thread=thread)
       form(
         class="create-reply-form",
-        action=fmt"/reply/{topic.id}/",
+        action=fmt"/reply/{thread.id}/",
         `method`="POST",
         enctype="multipart/form-data"
       ):
@@ -195,17 +195,17 @@ routes:
     resp wrapHtml(body, titleText)
 
 
-  post "/reply/@topic_id/":
-    let topicIdStr = @"topic_id"
-    var topicId: int64
+  post "/reply/@thread_id/":
+    let threadIdStr = @"thread_id"
+    var threadId: int64
     try:
-      topicId = topicIdStr.parseInt()
+      threadId = threadIdStr.parseInt()
     except ValueError:
-      resp Http400, "Invalid topic ID."
+      resp Http400, "Invalid thread ID."
       return
 
-    if not db.topicExists(topicId):
-      resp Http400, "Topic not found."
+    if not db.threadExists(threadId):
+      resp Http400, "Thread not found."
       return
 
     var ri: ReplyInput
@@ -231,25 +231,25 @@ routes:
         pic: picOpt,
         picFormat: picFormatOpt,
         content: request.formData["content"].body.strip(),
-        topicId: topicId
+        threadId: threadId
       )
     except:
       resp Http400, "Invalid form input."
       return
 
     let replyId: int64 = db.createReply(
-      ri.topicId,
+      ri.threadId,
       if ri.picFormat.isNone(): "" else: $ri.picFormat.get(),
       ri.content
     )
 
     if ri.pic.isSome():
       try:
-        await saveReplyPic(ri.pic.get(), fmt"{replyId}.{ri.picFormat.get()}")
+        await savePic(ri.pic.get(), fmt"{replyId}.{ri.picFormat.get()}")
       except:
-        db.deleteTopic(topicId)
-        resp Http500, "Failed to create topic."
+        db.deleteThread(threadId)
+        resp Http500, "Failed to create thread."
         return
 
-    let boardSlug = db.getBoardSlugFromTopicId(topicId)
-    redirect fmt"/{boardSlug}/{topicId}/#{replyId}"
+    let boardSlug = db.getBoardSlugFromThreadId(threadId)
+    redirect fmt"/{boardSlug}/{threadId}/#{replyId}"

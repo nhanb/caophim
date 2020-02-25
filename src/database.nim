@@ -8,7 +8,7 @@ type
     slug*: string
     name*: string
 
-  Topic* = object
+  Thread* = object
     id*: string
     picFormat*: ImageFormat
     content*: string
@@ -21,7 +21,7 @@ type
     picFormat*: Option[ImageFormat]
     content*: string
     createdAt*: string
-    topicId*: int64
+    threadId*: int64
 
 
 proc getDbConn*(): DbConn =
@@ -38,28 +38,42 @@ proc createDb*(db: DbConn)=
   );
   """)
 
+  #[
+  A Post can either be a Thread or Reply.
+  It's a Reply iff it has a thread_id.
+
+  This is baby's first Single Table Inheritance implementation so bear with me:
+    - CheckConstraints at least provide some guarantees. (TODO)
+    - The thread/reply views help avoid mistakes when querying one of the two.
+
+  In return we can cleanly implement universal "link to post" regardless of if
+  the post is a thread or reply.
+  ]#
+
   db.exec(sql"""
-  CREATE TABLE IF NOT EXISTS topic (
+  CREATE TABLE IF NOT EXISTS post (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    pic_format text NOT NULL,
+    pic_format text,
     content text NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    board_slug int NOT NULL,
+    thread_id int, -- reply-only field
+    board_slug text, -- thread-only field
+    FOREIGN KEY (thread_id) REFERENCES post(id) ON DELETE CASCADE,
     FOREIGN KEY (board_slug) REFERENCES board(slug) ON DELETE CASCADE
   );
   """)
 
   db.exec(sql"""
-  CREATE TABLE IF NOT EXISTS reply (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    pic_format text,
-    content text,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CREATE VIEW IF NOT EXISTS thread AS
+    SELECT id, pic_format, content, created_at, board_slug
+    FROM post WHERE thread_id IS NULL;
+  """)
 
-    topic_id int NOT NULL,
-    FOREIGN KEY (topic_id) REFERENCES topic(id) ON DELETE CASCADE
-  );
+  db.exec(sql"""
+  CREATE VIEW IF NOT EXISTS reply AS
+    SELECT id, pic_format, content, created_at, thread_id
+    FROM post WHERE thread_id IS NOT NULL;
   """)
 
 
@@ -79,7 +93,7 @@ proc getBoards*(db: DbConn): seq[Board] =
   return boards
 
 
-proc createTopic*(
+proc createThread*(
   db: DbConn,
   boardSlug: string,
   pic: string, # but is actually binary data
@@ -87,13 +101,13 @@ proc createTopic*(
   content: string
 ): int64 =
   return db.insertID(sql"""
-  INSERT INTO topic(board_slug, pic_format, content)
+  INSERT INTO post(board_slug, pic_format, content)
   VALUES (?, ?, ?);
   """, boardSlug, picFormat, content)
 
 
-proc deleteTopic*(db: DbConn, topicId: int64) =
-  db.exec(sql"DELETE FROM topic WHERE id = ?;", topicId)
+proc deleteThread*(db: DbConn, threadId: int64) =
+  db.exec(sql"DELETE FROM post WHERE thread_id IS NULL and id = ?;", threadId)
 
 
 proc getBoard*(db: DbConn, slug: string): Option[Board] =
@@ -104,18 +118,18 @@ proc getBoard*(db: DbConn, slug: string): Option[Board] =
     return some(Board(slug: slug, name: name))
 
 
-proc getTopics*(db: DbConn, board: Board): seq[Topic] =
+proc getThreads*(db: DbConn, board: Board): seq[Thread] =
   let rows = db.getAllRows(sql"""
   SELECT
     id, pic_format, content, created_at,
-    (SELECT count(*) from reply where reply.topic_id = topic.id) as num_replies
-  FROM topic
+    (SELECT count(*) from reply where reply.thread_id = thread.id) as num_replies
+  FROM thread
   WHERE board_slug = ?
   ORDER BY id DESC
   LIMIT 50;
   """, board.slug)
-  return rows.map(proc(r: seq[string]) : Topic =
-    Topic(
+  return rows.map(proc(r: seq[string]) : Thread =
+    Thread(
       id: r[0],
       picFormat: parseEnum[ImageFormat](r[1]),
       content: r[2],
@@ -126,17 +140,17 @@ proc getTopics*(db: DbConn, board: Board): seq[Topic] =
   )
 
 
-proc getTopic*(db: DbConn, board: Board, topicId: int64): Option[Topic] =
+proc getThread*(db: DbConn, board: Board, threadId: int64): Option[Thread] =
   let r = db.getRow(sql"""
   SELECT id, pic_format, content, created_at
-  FROM topic
+  FROM thread
   WHERE board_slug = ?
   AND id = ?;
-  """, board.slug, topicId)
+  """, board.slug, threadId)
   if r[0] == "":
-    return none(Topic)
+    return none(Thread)
   else:
-    return some(Topic(
+    return some(Thread(
       id: r[0],
       picFormat: parseEnum[ImageFormat](r[1]),
       content: r[2],
@@ -145,37 +159,37 @@ proc getTopic*(db: DbConn, board: Board, topicId: int64): Option[Topic] =
     ))
 
 
-proc topicExists*(db: DbConn, topicId: int64): bool =
-  return db.getValue(sql"SELECT 1 FROM topic WHERE id = ? LIMIT 1;", topicId) == "1"
+proc threadExists*(db: DbConn, threadId: int64): bool =
+  return db.getValue(sql"SELECT 1 FROM thread WHERE id = ? LIMIT 1;", threadId) == "1"
 
 
-proc getBoardSlugFromTopicId*(db: DbConn, topicId: int64): string =
+proc getBoardSlugFromThreadId*(db: DbConn, threadId: int64): string =
   return db.getValue(sql"""
   SELECT board.slug
   FROM board
-    INNER JOIN topic ON topic.board_slug = board.slug
-  WHERE topic.id = ?;
-  """, topicId)
+    INNER JOIN thread ON thread.board_slug = board.slug
+  WHERE thread.id = ?;
+  """, threadId)
 
 
 proc createReply*(
   db: DbConn,
-  topicId: int64,
+  threadId: int64,
   picFormat: string,
   content: string
 ): int64 =
   return db.insertID(sql"""
-  INSERT INTO reply(topic_id, pic_format, content) VALUES (?, ?, ?);
-  """, topicId, picFormat, content)
+  INSERT INTO post(thread_id, pic_format, content) VALUES (?, ?, ?);
+  """, threadId, picFormat, content)
 
 
-proc getReplies*(db: DbConn, topic: Topic): seq[Reply] =
+proc getReplies*(db: DbConn, thread: Thread): seq[Reply] =
   let rows = db.getAllRows(sql"""
   SELECT id, pic_format, content, created_at
   FROM reply
-  WHERE topic_id = ?
+  WHERE thread_id = ?
   ORDER BY id;
-  """, topic.id)
+  """, thread.id)
   return rows.map(r => Reply(
     id: r[0],
     picFormat:
@@ -183,5 +197,5 @@ proc getReplies*(db: DbConn, topic: Topic): seq[Reply] =
       else: some(parseEnum[ImageFormat](r[1])),
     content: r[2],
     createdAt: r[3],
-    topicId: topic.id.parseInt()
+    threadId: thread.id.parseInt()
   ))
