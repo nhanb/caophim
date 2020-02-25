@@ -100,12 +100,12 @@ routes:
 
     let threadId = db.createThread(
       slug,
-      tfd.pic,
-      $tfd.picFormat,
+      tfd.pic.blob,
+      $tfd.pic.format,
       tfd.content
     )
     try:
-      await savePic(tfd.pic, fmt"{threadId}.{tfd.picFormat}")
+      await savePic(tfd.pic.blob, fmt"{threadId}.{tfd.pic.format}")
     except:
       db.deleteThread(threadId)
       resp Http500, "Failed to create thread."
@@ -199,13 +199,14 @@ routes:
 
     let replyId: int64 = db.createReply(
       threadId,
-      if rfd.picFormat.isNone(): "" else: $rfd.picFormat.get(),
+      if rfd.pic.isNone(): "" else: $rfd.pic.get().format,
       rfd.content
     )
 
     if rfd.pic.isSome():
+      let pic = rfd.pic.get()
       try:
-        await savePic(rfd.pic.get(), fmt"{replyId}.{rfd.picFormat.get()}")
+        await savePic(pic.blob, fmt"{replyId}.{pic.format}")
       except:
         db.deleteThread(threadId)
         resp Http500, "Failed to create thread."

@@ -4,47 +4,47 @@ import imgformat
 
 
 type
+  Pic* = object
+    blob*: string
+    format*: ImageFormat
+
   ThreadFormData* = object
-    pic*: string
-    picFormat*: ImageFormat
+    pic*: Pic
     content*: string
 
   ReplyFormData* = object
-    pic*: Option[string]
-    picFormat*: Option[ImageFormat]
+    pic*: Option[Pic]
     content*: string
 
   UnsupportedImageFormat* = object of Exception
 
 
 proc validateThreadFormData*(request: Request): ThreadFormData =
-  let pic: string = request.formData["pic"].body
-  let picFormat: ImageFormat = getPicFormat(pic[0..IMGFORMAT_MAX_BYTES_USED])
+  let picBlob: string = request.formData["pic"].body
+  let picFormat: ImageFormat = getPicFormat(picBlob[0..IMGFORMAT_MAX_BYTES_USED])
   if picFormat == ImageFormat.Unsupported:
     raise newException(UnsupportedImageFormat, "")
 
   return ThreadFormData(
-    pic: pic,
-    picFormat: picFormat,
+    pic: Pic(blob: picBlob, format: picFormat),
     content: request.formData["content"].body.strip(),
   )
 
 
 proc validateReplyFormData*(request: Request): ReplyFormData =
-  var picOpt: Option[string]
-  var picFormatOpt: Option[ImageFormat]
+  var picOpt: Option[Pic]
+
   if request.formData["pic"].body == "":
-    picOpt = none(string)
-    picFormatOpt = none(ImageFormat)
+    picOpt = none(Pic)
+
   else:
-    let pic = request.formData["pic"].body
-    let picFormat = getPicFormat(pic[0..IMGFORMAT_MAX_BYTES_USED])
+    let picBlob = request.formData["pic"].body
+    let picFormat = getPicFormat(picBlob[0..IMGFORMAT_MAX_BYTES_USED])
     if picFormat == ImageFormat.Unsupported:
       raise newException(UnsupportedImageFormat, "")
-    picOpt = some(pic)
-    picFormatOpt = some(picFormat)
+    picOpt = some(Pic(blob: picBlob, format: picFormat))
+
   return ReplyFormData(
     pic: picOpt,
-    picFormat: picFormatOpt,
     content: request.formData["content"].body.strip(),
   )
