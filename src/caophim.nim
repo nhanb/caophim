@@ -1,21 +1,8 @@
 import options, strformat, strutils
 import jester
 import karax / [karaxdsl, vdom]
-import database, frontend, imgformat
+import database, frontend, form_validation
 import storage / [filesystem]
-
-type
-  ThreadInput = object
-    pic: string
-    picFormat: ImageFormat
-    content: string
-    boardSlug: string
-
-  ReplyInput = object
-    pic: Option[string]
-    picFormat: Option[ImageFormat]
-    content: string
-    threadId: int64
 
 
 createPicsDirs()
@@ -98,35 +85,27 @@ routes:
       resp Http404, "Board not found."
       return
 
-    var ti: ThreadInput
+    var tfd: ThreadFormData
     try:
-      # TODO: move this into a "deserializer" proc
-      # Also, don't rely on the catch-all exception handler to catch stuff like
-      # index out of bounds error:
+      # TODO: don't rely on the catch-all exception handler to catch stuff like
+      # index out of bounds error - it's bad form and isn't future-proof anyway:
       # https://nim-lang.org/araq/gotobased_exceptions.html
-      let pic: string = request.formData["pic"].body
-      let picFormat: ImageFormat = getPicFormat(pic[0..IMGFORMAT_MAX_BYTES_USED])
-      if picFormat == ImageFormat.Unsupported:
-        resp Http400, "Unsupported image format."
-        return
-      ti = ThreadInput(
-        pic: pic,
-        picFormat: picFormat,
-        content: request.formData["content"].body.strip(),
-        boardSlug: slug
-      )
+      tfd = validateThreadFormData(request)
+    except UnsupportedImageFormat:
+      resp Http400, "Unsupported image format."
+      return
     except:
       resp Http400, "Invalid form input."
       return
 
     let threadId = db.createThread(
-      ti.boardSlug,
-      ti.pic,
-      $ti.picFormat,
-      ti.content
+      slug,
+      tfd.pic,
+      $tfd.picFormat,
+      tfd.content
     )
     try:
-      await savePic(ti.pic, fmt"{threadId}.{ti.picFormat}")
+      await savePic(tfd.pic, fmt"{threadId}.{tfd.picFormat}")
     except:
       db.deleteThread(threadId)
       resp Http500, "Failed to create thread."
@@ -208,44 +187,25 @@ routes:
       resp Http400, "Thread not found."
       return
 
-    var ri: ReplyInput
+    var rfd: ReplyFormData
     try:
-      # TODO: move this into a "deserializer" proc
-      # Also, don't rely on the catch-all exception handler to catch stuff like
-      # index out of bounds error:
+      # TODO: don't rely on the catch-all exception handler to catch stuff like
+      # index out of bounds error - it's bad form and isn't future-proof anyway:
       # https://nim-lang.org/araq/gotobased_exceptions.html
-      var picOpt: Option[string]
-      var picFormatOpt: Option[ImageFormat]
-      if request.formData["pic"].body == "":
-        picOpt = none(string)
-        picFormatOpt = none(ImageFormat)
-      else:
-        let pic = request.formData["pic"].body
-        let picFormat = getPicFormat(pic[0..IMGFORMAT_MAX_BYTES_USED])
-        if picFormat == ImageFormat.Unsupported:
-          resp Http400, "Unsupported image format."
-          return
-        picOpt = some(pic)
-        picFormatOpt = some(picFormat)
-      ri = ReplyInput(
-        pic: picOpt,
-        picFormat: picFormatOpt,
-        content: request.formData["content"].body.strip(),
-        threadId: threadId
-      )
+      rfd = validateReplyFormData(request)
     except:
       resp Http400, "Invalid form input."
       return
 
     let replyId: int64 = db.createReply(
-      ri.threadId,
-      if ri.picFormat.isNone(): "" else: $ri.picFormat.get(),
-      ri.content
+      threadId,
+      if rfd.picFormat.isNone(): "" else: $rfd.picFormat.get(),
+      rfd.content
     )
 
-    if ri.pic.isSome():
+    if rfd.pic.isSome():
       try:
-        await savePic(ri.pic.get(), fmt"{replyId}.{ri.picFormat.get()}")
+        await savePic(rfd.pic.get(), fmt"{replyId}.{rfd.picFormat.get()}")
       except:
         db.deleteThread(threadId)
         resp Http500, "Failed to create thread."
