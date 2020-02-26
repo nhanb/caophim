@@ -147,3 +147,6 @@ strong,
   background-color: floralwhite;
   border: 1px solid burlywood;
 }
+.reply:target {
+  background: linear-gradient(floralwhite, bisque);
+}

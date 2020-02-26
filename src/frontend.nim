@@ -50,7 +50,7 @@ proc renderThread*(thread: Thread): VNode =
       img(class="thread-pic", src=picUrl)
     tdiv(class="thread-header"):
       a(href=fmt"/{thread.boardSlug}/{thread.id}/", id=thread.id):
-        text "[" & thread.id & "]"
+        text "/" & thread.id & "/"
       time(datetime=thread.createdAt & "+00:00"): text thread.createdAt & " UTC"
       if thread.numReplies.isSome():
         let num = thread.numReplies.get()
@@ -63,7 +63,7 @@ proc renderThread*(thread: Thread): VNode =
 
 
 proc renderReply(reply: Reply, thread: Thread): VNode =
-  return buildHtml(tdiv(class="reply")):
+  return buildHtml(tdiv(class="reply", id = $reply.id)):
     if reply.picFormat.isSome():
       let picUrl = fmt"/pics/{reply.id}.{reply.pic_format.get()}"
       a(href=picUrl, class="reply-pic-anchor"):
@@ -72,8 +72,8 @@ proc renderReply(reply: Reply, thread: Thread): VNode =
       a(class="reply-pic-anchor"): text "text only"
 
     tdiv(class="reply-header"):
-      a(href=fmt"#{reply.id}", id = $reply.id):
-        text fmt"[{reply.id}]"
+      a(href=fmt"#{reply.id}"):
+        text fmt"#{reply.id}"
       time(datetime=reply.createdAt & "+00:00"): text reply.createdAt & " UTC"
     renderContent("reply-content", reply.content, thread)
 
