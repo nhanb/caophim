@@ -60,7 +60,8 @@ form > button[type="submit"] {
   max-width: 200px;
 }
 
-strong {
+strong,
+.bold {
   font-weight: bold;
 }
 

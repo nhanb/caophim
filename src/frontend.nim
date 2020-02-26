@@ -29,7 +29,7 @@ proc renderContent(class: string, content: string, thread: Thread): VNode =
       if line.match(re(r"^>>\d+$")): # quoting thread
         let threadId = line[2..^1]
         if threadId == thread.id:
-          a(href="#thread-top"): text line
+          a(href="#" & thread.id): text line
         else:
           a(class="cross-link", href=fmt"/{thread.boardSlug}/{threadId}/"): text line
       else:
@@ -49,13 +49,13 @@ proc renderThread*(thread: Thread): VNode =
     a(href=picUrl, class="thread-pic-anchor"):
       img(class="thread-pic", src=picUrl)
     tdiv(class="thread-header"):
-      a(href=fmt"/{thread.boardSlug}/{thread.id}/", id="thread-top"):
+      a(href=fmt"/{thread.boardSlug}/{thread.id}/", id=thread.id):
         text "[" & thread.id & "]"
-      time(datetime=thread.createdAt): text thread.createdAt
+      time(datetime=thread.createdAt & "+00:00"): text thread.createdAt & " UTC"
       if thread.numReplies.isSome():
         let num = thread.numReplies.get()
         text ", "
-        span():
+        span(class=if num == 0: "" else: "bold"):
           text fmt"{num} "
           if num == 1: text "reply"
           else: text "replies"
@@ -74,7 +74,7 @@ proc renderReply(reply: Reply, thread: Thread): VNode =
     tdiv(class="reply-header"):
       a(href=fmt"#{reply.id}", id = $reply.id):
         text fmt"[{reply.id}]"
-      time(datetime=reply.createdAt): text reply.createdAt
+      time(datetime=reply.createdAt & "+00:00"): text reply.createdAt & " UTC"
     renderContent("reply-content", reply.content, thread)
 
 proc renderReplies*(replies: seq[Reply], thread: Thread): VNode =
