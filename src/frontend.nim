@@ -1,4 +1,4 @@
-import strformat, strutils, options, re
+import strformat, strutils, options, db_sqlite
 import karax / [karaxdsl, vdom]
 import database
 
@@ -19,37 +19,49 @@ proc wrapHtml*(element: VNode, pageTitle: string = ""): string =
   return "<!DOCTYPE html>\n" & $html
 
 
-# TODO: consider storing pre-processed paragraphs and links instead
-# of processing on every view here
-proc renderContent(class: string, content: string, thread: Thread): VNode =
+proc renderContentNode(node: ContentNode, thread: Thread): VNode =
+  case node.kind
+  of P:
+    return buildHtml(p):
+      for child in node.pChildren:
+        renderContentNode(child, thread)
+  of Br: return verbatim("<br />")
+  of Text: return text node.textStr
+  of Quote:
+    return buildHtml(span(class="greentext")): text node.quoteStr
+  of Link:
+    let class =
+      if $node.linkThreadId != thread.id: "cross-link"
+      elif $node.linkPostId == thread.id: "op-link"
+      else: ""
+    return buildHtml(a(href=node.linkHref, class=class)): text node.linkText
 
-  # If line is in "quote" format, render link to quoted thread/reply
-  proc renderLine(line: string): VNode =
-    buildHtml(span):
-      if line.match(re(r"^>>\d+$")): # quoting thread
-        let threadId = line[2..^1]
-        if threadId == thread.id:
-          a(href="#" & thread.id): text line
-        else:
-          a(class="cross-link", href=fmt"/{thread.boardSlug}/{threadId}/"): text line
-      else:
-        text line
+
+proc renderContent(
+  class: string,
+  content: seq[ContentNode],
+  thread: Thread
+): VNode =
 
   return buildHtml(tdiv(class=class)):
-      for paragraph in content.split("\c\n\c\n"):
-        p():
-          for line in paragraph.split("\c\n"):
-            renderLine(line)
-            verbatim("<br/>")
+    for node in content:
+      renderContentNode(node, thread=thread)
 
 
-proc renderThread*(thread: Thread): VNode =
+proc renderLinks(boardSlug: string, threadId: string, linkingIds: seq[int64]): VNode =
+  return buildHtml(span(class="links")):
+    for id in linkingIds:
+      a(href=fmt"/{boardSlug}/{threadId}/#{id}"): text fmt">>{id}"
+
+
+proc renderThread*(db: DbConn, thread: Thread): VNode =
   let picUrl = fmt"/pics/{thread.id}.{thread.pic_format}"
+  let links = db.getLinks(thread)
   return buildHtml(tdiv(class="thread")):
     a(href=picUrl, class="thread-pic-anchor"):
       img(class="thread-pic", src=picUrl)
     tdiv(class="thread-header"):
-      a(href=fmt"/{thread.boardSlug}/{thread.id}/", id=thread.id):
+      a(href=fmt"/{thread.boardSlug}/{thread.id}/", id=thread.id, class="permalink"):
         text "/" & thread.id & "/"
       time(datetime=thread.createdAt & "+00:00"): text thread.createdAt & " UTC"
       if thread.numReplies.isSome():
@@ -59,10 +71,12 @@ proc renderThread*(thread: Thread): VNode =
           text fmt"{num} "
           if num == 1: text "reply"
           else: text "replies"
-    renderContent("thread-content", thread.content, thread)
+      renderLinks(thread.boardSlug, thread.id, links)
+    renderContent("thread-content", thread.parsedContent, thread)
 
 
-proc renderReply(reply: Reply, thread: Thread): VNode =
+proc renderReply(db: DbConn, reply: Reply, thread: Thread): VNode =
+  let links = db.getLinks(reply)
   return buildHtml(tdiv(class="reply", id = $reply.id)):
     if reply.picFormat.isSome():
       let picUrl = fmt"/pics/{reply.id}.{reply.pic_format.get()}"
@@ -72,14 +86,15 @@ proc renderReply(reply: Reply, thread: Thread): VNode =
       a(class="reply-pic-anchor"): text "text only"
 
     tdiv(class="reply-header"):
-      a(href=fmt"#{reply.id}"):
+      a(href=fmt"#{reply.id}", class="permalink"):
         text fmt"#{reply.id}"
       time(datetime=reply.createdAt & "+00:00"): text reply.createdAt & " UTC"
-    renderContent("reply-content", reply.content, thread)
+      renderLinks(thread.boardSlug, thread.id, links)
+    renderContent("reply-content", reply.parsedContent, thread)
 
-proc renderReplies*(replies: seq[Reply], thread: Thread): VNode =
+proc renderReplies*(db: DbConn, replies: seq[Reply], thread: Thread): VNode =
   return buildHtml(tdiv(class="replies")):
     for reply in replies:
-      renderReply(reply, thread)
+      db.renderReply(reply, thread)
     if len(replies) == 0:
       p(): text "No replies yet."

@@ -55,7 +55,7 @@ routes:
           text if threads.len == 1: " thread" else: " threads"
           text fmt" in /{slug}/"
         for thread in threads:
-          renderThread(thread)
+          db.renderThread(thread)
 
       form(
         class="create-thread-form",
@@ -151,8 +151,8 @@ routes:
         text "/"
         a(href=fmt"/{slug}/"): text fmt"{slug}"
         text fmt"/{thread.id}/ - {titleText}"
-      renderThread(thread)
-      renderReplies(replies, thread=thread)
+      db.renderThread(thread)
+      db.renderReplies(replies, thread=thread)
       form(
         class="create-reply-form",
         action=fmt"/reply/{thread.id}/",

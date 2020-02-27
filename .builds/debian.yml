@@ -16,9 +16,9 @@ tasks:
       git push -f github '*:*' --prune --follow-tags
 
   - build: |
-      curl 'https://nim-lang.org/download/nim-1.0.6-linux_x64.tar.xz' -o nim.tar.xz
+      curl -L 'https://github.com/nim-lang/nightlies/releases/download/2020-02-24-devel-3dad130/nim-1.1.1-linux_x64.tar.xz' -o nim.tar.xz
       tar -xf nim.tar.xz
-      cd nim-1.0.6
+      cd nim-1.1.1
       sudo sh install.sh /usr/bin
       sudo cp bin/* /usr/bin
 

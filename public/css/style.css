@@ -111,14 +111,18 @@ strong,
   grid-area: header;
   align-self: start;
 }
-.thread-header a,
-.reply-header a {
+.thread-header .permalink,
+.reply-header .permalink {
   font-size: 110%;
   margin-right: 5px;
 }
 .thread-header,
 .reply-header {
   font-size: 90%;
+}
+.thread-header .links,
+.reply-header .links {
+  /* todo */
 }
 .thread-content,
 .reply-content {
@@ -136,7 +140,6 @@ strong,
   margin-bottom: 0;
 }
 
-.cross-link,
 .thread,
 .create-thread-form {
   background-color: bisque;
@@ -148,5 +151,17 @@ strong,
   border: 1px solid burlywood;
 }
 .reply:target {
-  background: linear-gradient(floralwhite, bisque);
+  background-color: lightcyan;
+}
+
+.op-link::after {
+  content: " (OP)";
+}
+.cross-link {
+  border: 1px solid grey;
+  background-color: bisque;
+}
+
+.greentext {
+  color: green;
 }

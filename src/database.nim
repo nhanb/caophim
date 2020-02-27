@@ -1,4 +1,4 @@
-import db_sqlite, sequtils, sugar, options, strutils
+import db_sqlite, sequtils, sugar, options, strutils, re, json, strformat
 import imgformat
 
 const DB_FILE_NAME = "db.sqlite3"
@@ -12,6 +12,7 @@ type
     id*: string
     picFormat*: ImageFormat
     content*: string
+    parsedContent*: seq[ContentNode]
     createdAt*: string
     boardSlug*: string
     numReplies*: Option[int]
@@ -20,9 +21,31 @@ type
     id*: string
     picFormat*: Option[ImageFormat]
     content*: string
+    parsedContent*: seq[ContentNode]
     createdAt*: string
     threadId*: int64
 
+  PostType* = enum
+    ThreadType = "thread"
+    ReplyType = "reply"
+  ContentNodeKind* = enum
+    P,
+    Br,
+    Text,
+    Quote,
+    Link
+  ContentNode* = object
+    case kind*: ContentNodeKind
+    of P: pChildren*: seq[ContentNode]
+    of Br: nil
+    of Text: textStr*: string
+    of Quote: quoteStr*: string
+    of Link:
+      linkText*: string
+      linkHref*: string
+      linkType*: PostType
+      linkPostId*: int64
+      linkThreadId*: int64
 
 proc getDbConn*(): DbConn =
   let db = open(DB_FILE_NAME, "", "", "")
@@ -55,6 +78,7 @@ proc createDb*(db: DbConn)=
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     pic_format text,
     content text NOT NULL,
+    parsed_content text,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     thread_id int, -- reply-only field
@@ -66,14 +90,24 @@ proc createDb*(db: DbConn)=
 
   db.exec(sql"""
   CREATE VIEW IF NOT EXISTS thread AS
-    SELECT id, pic_format, content, created_at, board_slug
+    SELECT id, pic_format, content, parsed_content, created_at, board_slug
     FROM post WHERE thread_id IS NULL;
   """)
 
   db.exec(sql"""
   CREATE VIEW IF NOT EXISTS reply AS
-    SELECT id, pic_format, content, created_at, thread_id
+    SELECT id, pic_format, content, parsed_content, created_at, thread_id
     FROM post WHERE thread_id IS NOT NULL;
+  """)
+
+  db.exec(sql"""
+  CREATE TABLE IF NOT EXISTS link (
+    post_id INTEGER NOT NULL,
+    linked_post_id INTEGER NOT NULL,
+    FOREIGN KEY (post_id) REFERENCES post(id) ON DELETE CASCADE,
+    FOREIGN KEY (linked_post_id) REFERENCES post(id) ON DELETE CASCADE,
+    UNIQUE (post_id, linked_post_id)
+  );
   """)
 
 
@@ -85,6 +119,94 @@ proc seedBoards*(db: DbConn) =
     ('rand', 'anything goes')
   ON CONFLICT(slug) DO UPDATE SET name=excluded.name;
   """)
+
+
+proc processContent*(db: DbConn, content: string, postId: int64) =
+  # Truncate 3-or-more consecutive newlines
+  let c = content.replace(re"\r\n\r\n(\r\n)+", "\c\n\c\n")
+
+  var nodes: seq[ContentNode]
+
+  # Poor man's parser into the simplest node graph we can get away with, just
+  # enough structure for rendering the html later.
+  #
+  # Also populate the `link` db table, so we can query "this post is quoted by
+  # which other posts"
+  for paragraph in c.split("\c\n\c\n"):
+    var p = ContentNode(kind: P)
+
+    for line in paragraph.split("\c\n"):
+      if line.match(re(r"^>>\d+$")):
+        var linkedId: int64 = 0
+        try:
+          linkedId = parseInt(line[2..^1])
+        except ValueError:
+          discard # so linkedId stays 0
+
+        # If id is not valid int or is linking to itself: treat line as text
+        if linkedId == 0 or linkedId == postId:
+          p.pChildren.add(ContentNode(kind: Text, textStr: line))
+
+        else:
+          # Query to make sure linked ID actually exists:
+          let r = db.getRow(sql"""
+          SELECT id, thread_id, board_slug
+          FROM post WHERE id = ? AND id < ?;
+          """, linkedId, postId)
+
+          if r[0] == "":
+            # not found: treat as normal text
+            p.pChildren.add(ContentNode(kind: Text, textStr: line))
+
+          else:
+            let linkedPostThreadId = r[1]
+            var linkHref: string
+            var linkThreadId: int64
+            var linkType: PostType
+            if linkedPostThreadId == "":
+              linkType = ThreadType
+              linkHref = fmt"/{r[2]}/{linkedId}/#{linkedId}"
+              linkThreadId = linkedId
+            else:
+              linkType = ReplyType
+              linkThreadId = linkedPostThreadId.parseInt()
+              let boardSlug = db.getValue(sql"""
+              SELECT board_slug FROM thread WHERE id = ?;
+              """, linkedPostThreadId)
+              linkHref = fmt"/{boardSlug}/{linkedPostThreadId}/#{linkedId}"
+
+            # found: add Link node
+            p.pChildren.add(ContentNode(
+              kind: Link,
+              linkText: line,
+              linkHref: linkHref,
+              linkType: linkType,
+              linkPostId: linkedId,
+              linkThreadId: linkThreadId,
+            ))
+            # also create `link` db record:
+            db.exec(sql"""
+            INSERT INTO link (post_id, linked_post_id)
+            VALUES (?, ?)
+            ON CONFLICT DO NOTHING;
+            """, postId, linkedId)
+
+      elif line.match(re(r"^>.+$")):
+        p.pChildren.add(ContentNode(kind: Quote, quoteStr: line))
+
+      else:
+        p.pChildren.add(ContentNode(kind: Text, textStr: line))
+
+      p.pChildren.add(ContentNode(kind: Br))
+
+    nodes.add(p)
+
+  # Save the whole thing into db
+  db.exec(sql"""
+  UPDATE post
+  SET parsed_content = ?
+  WHERE id = ?
+  """, $(%*nodes), postId)
 
 
 proc getBoards*(db: DbConn): seq[Board] =
@@ -100,10 +222,17 @@ proc createThread*(
   picFormat: string,
   content: string
 ): int64 =
-  return db.insertID(sql"""
+  db.exec(sql"BEGIN TRANSACTION;")
+
+  let threadId = db.insertID(sql"""
   INSERT INTO post(board_slug, pic_format, content)
   VALUES (?, ?, ?);
   """, boardSlug, picFormat, content)
+
+  db.processContent(content, threadId)
+
+  db.exec(sql"COMMIT;")
+  return threadId
 
 
 proc deleteThread*(db: DbConn, threadId: int64) =
@@ -121,7 +250,7 @@ proc getBoard*(db: DbConn, slug: string): Option[Board] =
 proc getThreads*(db: DbConn, board: Board): seq[Thread] =
   let rows = db.getAllRows(sql"""
   SELECT
-    id, pic_format, content, created_at,
+    id, pic_format, content, parsed_content, created_at,
     (SELECT count(*) from reply where reply.thread_id = thread.id) as num_replies
   FROM thread
   WHERE board_slug = ?
@@ -133,16 +262,17 @@ proc getThreads*(db: DbConn, board: Board): seq[Thread] =
       id: r[0],
       picFormat: parseEnum[ImageFormat](r[1]),
       content: r[2],
-      createdAt: r[3],
+      parsedContent: r[3].parseJson().to(seq[ContentNode]),
+      createdAt: r[4],
       boardSlug: board.slug,
-      numReplies: some(r[4].parseInt)
+      numReplies: some(r[5].parseInt)
     )
   )
 
 
 proc getThread*(db: DbConn, board: Board, threadId: int64): Option[Thread] =
   let r = db.getRow(sql"""
-  SELECT id, pic_format, content, created_at
+  SELECT id, pic_format, content, parsed_content, created_at
   FROM thread
   WHERE board_slug = ?
   AND id = ?;
@@ -154,7 +284,8 @@ proc getThread*(db: DbConn, board: Board, threadId: int64): Option[Thread] =
       id: r[0],
       picFormat: parseEnum[ImageFormat](r[1]),
       content: r[2],
-      createdAt: r[3],
+      parsedContent: r[3].parseJson().to(seq[ContentNode]),
+      createdAt: r[4],
       boardSlug: board.slug
     ))
 
@@ -178,14 +309,21 @@ proc createReply*(
   picFormat: string,
   content: string
 ): int64 =
-  return db.insertID(sql"""
+  db.exec(sql"BEGIN TRANSACTION;")
+
+  let replyId = db.insertID(sql"""
   INSERT INTO post(thread_id, pic_format, content) VALUES (?, ?, ?);
   """, threadId, picFormat, content)
+
+  db.processContent(content, replyId)
+
+  db.exec(sql"COMMIT;")
+  return replyId
 
 
 proc getReplies*(db: DbConn, thread: Thread): seq[Reply] =
   let rows = db.getAllRows(sql"""
-  SELECT id, pic_format, content, created_at
+  SELECT id, pic_format, content, parsed_content, created_at
   FROM reply
   WHERE thread_id = ?
   ORDER BY id;
@@ -196,6 +334,24 @@ proc getReplies*(db: DbConn, thread: Thread): seq[Reply] =
       if r[1] == "": none(ImageFormat)
       else: some(parseEnum[ImageFormat](r[1])),
     content: r[2],
-    createdAt: r[3],
+    parsedContent: r[3].parseJson().to(seq[ContentNode]),
+    createdAt: r[4],
     threadId: thread.id.parseInt()
   ))
+
+
+proc getLinksToPost(db: DbConn, linkedPostId: int64, linkedThreadId: int64): seq[int64] =
+  let rows = db.getAllRows(sql"""
+  SELECT reply.id
+  FROM link INNER JOIN reply ON reply.id = link.post_id
+  WHERE link.linked_post_id = ?
+    AND reply.thread_id = ?;
+  """, linkedPostId, linkedThreadId)
+  return rows.map(proc (r: seq[string]): int64 = r[0].parseInt)
+
+proc getLinks*(db: DbConn, reply: Reply): seq[int64] =
+  return db.getLinksToPost(reply.id.parseInt, reply.thread_id)
+
+proc getLinks*(db: DbConn, thread: Thread): seq[int64] =
+  let threadId = thread.id.parseInt
+  return db.getLinksToPost(threadId, threadId)
