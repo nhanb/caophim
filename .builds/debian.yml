@@ -39,7 +39,13 @@ tasks:
   # > https://todo.sr.ht/~sircmpwn/builds.sr.ht/170
   - check-release: |
       cd caophim
-      if git symbolic-ref HEAD; then complete-build; else echo "Tag detected."; fi
+      export TAG=$(git describe --tags)
+      if [ -z "$TAG" ]
+      then
+        complete-build
+      else
+        echo "Tag detected."
+      fi
 
   - release: |
       # download & setup the `hub` client
@@ -47,8 +53,8 @@ tasks:
       tar -xf hub.tgz
       sudo cp hub-linux-amd64-2.14.1/bin/hub /usr/bin/
       cd caophim
-      export TAG=`git describe --tags`
-      hub release create -a caophim.tar.gz "$TAG"
+      export TAG=$(git describe --tags)
+      hub release create -a caophim.tar.gz "$TAG" -m "Released $TAG"
 
 
 artifacts:
