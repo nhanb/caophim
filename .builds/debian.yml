@@ -24,3 +24,13 @@ tasks:
 
       cd ~/caophim
       nimble install --accept
+
+  - package: |
+      cd ~/caophim/
+      mkdir caophim-dist
+      cp -r public caophim-dist/public
+      cp bin/* caophim-dist/
+      tar -czvf caophim.tar.gz caophim-dist
+
+artifacts:
+  - caophim/caophim.tar.gz
