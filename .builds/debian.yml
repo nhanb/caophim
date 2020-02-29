@@ -2,6 +2,7 @@ image: debian/buster
 
 secrets:
   - 42bb7f41-956c-4cb8-a685-2fa6e59f5f14
+  - 63991352-48fc-43df-acb7-697c7f43c77b
 
 packages:
   - curl
@@ -29,8 +30,31 @@ tasks:
       cd ~/caophim/
       mkdir caophim-dist
       cp -r public caophim-dist/public
+      cp -r aws caophim-dist/aws
+      cp config.ini.example caophim-dist/
       cp bin/* caophim-dist/
       tar -czvf caophim.tar.gz caophim-dist
+
+  # Builds.sr.ht doesn't support tag or even branch detection yet:
+  # > https://todo.sr.ht/~sircmpwn/builds.sr.ht/170
+  - check-release: |
+      if [[ "$GITHUB_EVENT" == "push" ]] && [[ "$GITHUB_REF" =~ ^refs/tags/ ]]
+      then
+          echo "This is a tag push. Proceeding to release..."
+      else
+          echo "Not deploying."
+          complete-build  # stop build with a "success" status
+      fi
+
+  - release: |
+      # download & setup the `hub` client
+      curl -L 'https://github.com/github/hub/releases/download/v2.14.1/hub-linux-amd64-2.14.1.tgz' -o hub.tgz
+      tar -xf hub.tgz
+      sudo cp hub-linux-amd64-2.14.1/bin/hub /usr/bin/
+      cd caophim
+      export TAG=`git describe --tags`
+      hub release create -a caophim.tar.gz "$TAG"
+
 
 artifacts:
   - caophim/caophim.tar.gz
