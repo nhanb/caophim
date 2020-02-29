@@ -29,3 +29,14 @@ there. Other files should only define composable, stateless utils.
 
 This project unapologetically utilizes n+1 queries, since they're [not a
 problem with sqlite](https://www.sqlite.org/np1queryprob.html).
+
+# Usage
+
+## Server setup
+
+S3:
+
+- create your bucket and access id - secret pair
+- `cp aws/credentials-example aws/credentials`
+- fill key & secret in credentials file
+- install aws-cli on server

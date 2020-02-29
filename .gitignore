@@ -1,3 +1,4 @@
 /bin/
 /public/pics/
 *.sqlite3
+/aws/

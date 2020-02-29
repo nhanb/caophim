@@ -2,7 +2,7 @@ import options, strformat, strutils
 import jester
 import karax / [karaxdsl, vdom]
 import database, frontend, form_validation
-import storage / [filesystem]
+import storage / [s3]
 
 
 createPicsDirs()
@@ -108,7 +108,8 @@ routes:
       await savePic(tfd.pic.blob, fmt"{threadId}.{tfd.pic.format}")
     except:
       db.deleteThread(threadId)
-      resp Http500, "Failed to create thread."
+      resp Http500, "Failed to upload pic."
+      echo "ERRRRR: " & getCurrentExceptionMsg()
       return
 
     redirect fmt"/{slug}/{threadId}/"
@@ -208,8 +209,9 @@ routes:
       try:
         await savePic(pic.blob, fmt"{replyId}.{pic.format}")
       except:
-        db.deleteThread(threadId)
-        resp Http500, "Failed to create thread."
+        db.deleteReply(replyId)
+        resp Http500, "Failed to upload pic."
+        echo "ERRRRR: " & getCurrentExceptionMsg()
         return
 
     let boardSlug = db.getBoardSlugFromThreadId(threadId)

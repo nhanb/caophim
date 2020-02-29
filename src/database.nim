@@ -239,6 +239,10 @@ proc deleteThread*(db: DbConn, threadId: int64) =
   db.exec(sql"DELETE FROM post WHERE thread_id IS NULL and id = ?;", threadId)
 
 
+proc deleteReply*(db: DbConn, replyId: int64) =
+  db.exec(sql"DELETE FROM post WHERE thread_id IS NOT NULL and id = ?;", replyId)
+
+
 proc getBoard*(db: DbConn, slug: string): Option[Board] =
   let name = db.getValue(sql"SELECT name FROM board WHERE slug = ?;", slug)
   if name == "":

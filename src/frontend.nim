@@ -1,6 +1,7 @@
 import strformat, strutils, options, db_sqlite
 import karax / [karaxdsl, vdom]
 import database
+import storage / [s3]
 
 
 proc wrapHtml*(element: VNode, pageTitle: string = ""): string =
@@ -55,7 +56,7 @@ proc renderLinks(boardSlug: string, threadId: string, linkingIds: seq[int64]): V
 
 
 proc renderThread*(db: DbConn, thread: Thread): VNode =
-  let picUrl = fmt"/pics/{thread.id}.{thread.pic_format}"
+  let picUrl = getPostPicUrl(fmt"{thread.id}.{thread.pic_format}")
   let links = db.getLinks(thread)
   return buildHtml(tdiv(class="thread")):
     a(href=picUrl, class="thread-pic-anchor"):
@@ -79,7 +80,7 @@ proc renderReply(db: DbConn, reply: Reply, thread: Thread): VNode =
   let links = db.getLinks(reply)
   return buildHtml(tdiv(class="reply", id = $reply.id)):
     if reply.picFormat.isSome():
-      let picUrl = fmt"/pics/{reply.id}.{reply.pic_format.get()}"
+      let picUrl = getPostPicUrl(fmt"{reply.id}.{reply.pic_format.get()}")
       a(href=picUrl, class="reply-pic-anchor"):
         img(class="reply-pic", src=picUrl)
     else:
