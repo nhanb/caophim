@@ -40,3 +40,9 @@ S3:
 - `cp aws/credentials-example aws/credentials`
 - fill key & secret in credentials file
 - install aws-cli on server
+
+- `cp config.ini.example config.ini`
+- fill s3 configs
+
+I'll need to write code for auto-generating the aws credentials file using
+values from config.ini.

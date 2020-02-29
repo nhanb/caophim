@@ -1,13 +1,7 @@
 import asyncfile, asyncdispatch, strformat, os
+import ../cpconf
 
 const PICS_DIR = "public" / "pics"
-
-# TODO: probably should move all thread/reply pics path related logic into this
-# module.
-
-#TODO make configurable
-const BUCKET = "p.caophim.net"
-const ENDPOINT_URL = "https://s3.us-west-1.wasabisys.com"
 
 
 proc createPicsDirs*() =
@@ -27,8 +21,8 @@ proc savePic*(blob: string, filename: string) {.async} =
   # use the REST API properly with an asynchttpclient.
   let uploadCmd = (
     "export AWS_SHARED_CREDENTIALS_FILE=aws/credentials && " &
-    fmt"aws s3 --endpoint-url='{ENDPOINT_URL}' " &
-    fmt"cp '{localFilePath}' 's3://{BUCKET}/'"
+    fmt"aws s3 --endpoint-url='https://s3.{conf.s3.region}.{conf.s3.host}' " &
+    fmt"cp '{localFilePath}' 's3://{conf.s3.bucket}/'"
   )
   echo uploadCmd
   let errC = execShellCmd(uploadCmd)
@@ -40,4 +34,4 @@ proc savePic*(blob: string, filename: string) {.async} =
 
 
 proc getPostPicUrl*(filename: string): string =
-  return fmt"https://{BUCKET}/{filename}"
+  return fmt"https://{conf.s3.bucket}/{filename}"

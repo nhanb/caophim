@@ -1,0 +1,4 @@
+[s3]
+bucket = "p.caophim.net"
+region = "us-west-1"
+host = "amazonaws.com"
