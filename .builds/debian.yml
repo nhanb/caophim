@@ -24,7 +24,7 @@ tasks:
       sudo cp bin/* /usr/bin
 
       cd ~/caophim
-      nimble install --accept
+      nimble build --accept
 
   - package: |
       cd ~/caophim/
@@ -34,6 +34,15 @@ tasks:
       cp config.ini.example caophim-dist/
       cp bin/* caophim-dist/
       tar -czvf caophim.tar.gz caophim-dist
+
+  - release-nightly: |
+      # download & setup the `hub` client
+      curl -L 'https://github.com/github/hub/releases/download/v2.14.1/hub-linux-amd64-2.14.1.tgz' -o hub.tgz
+      tar -xf hub.tgz
+      sudo cp hub-linux-amd64-2.14.1/bin/hub /usr/bin/
+      cd caophim
+      export TAG="nightly-$(git rev-parse HEAD)"
+      hub release create -a caophim.tar.gz "$TAG" -m "Nightly $TAG" --prerelease
 
   # Builds.sr.ht doesn't support tag or even branch detection yet:
   # > https://todo.sr.ht/~sircmpwn/builds.sr.ht/170
