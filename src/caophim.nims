@@ -1,1 +1,3 @@
 --define:ssl
+--dynlibOverride:sqlite3
+--passL:"./sqlite3.o"

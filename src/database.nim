@@ -54,6 +54,7 @@ proc getDbConn*(): DbConn =
 
 
 proc createDb*(db: DbConn)=
+  echo "sqlite version: " & db.getValue(sql"select sqlite_version();")
   db.exec(sql"""
   CREATE TABLE IF NOT EXISTS board (
     slug text UNIQUE NOT NULL,

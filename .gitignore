@@ -3,3 +3,4 @@
 *.sqlite3
 /aws/
 /config.ini
+/sqlite3.o

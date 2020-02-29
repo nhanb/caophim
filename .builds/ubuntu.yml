@@ -1,4 +1,4 @@
-image: debian/buster
+image: ubuntu/bionic
 
 secrets:
   - 42bb7f41-956c-4cb8-a685-2fa6e59f5f14
@@ -6,6 +6,7 @@ secrets:
 
 packages:
   - curl
+  - unzip
 
 tasks:
   - mirror-to-github: |
@@ -22,6 +23,11 @@ tasks:
       cd nim-1.1.1
       sudo sh install.sh /usr/bin
       sudo cp bin/* /usr/bin
+
+      curl -L 'https://sqlite.org/2020/sqlite-amalgamation-3310100.zip' -o sqlite.zip
+      unzip sqlite.zip
+      cd sqlite-amalgamation-3310100
+      gcc -c -DSQLITE_THREADSAFE=0 sqlite3.c -o ~/caophim/sqlite3.o
 
       cd ~/caophim
       nimble build --accept
@@ -42,7 +48,7 @@ tasks:
       sudo cp hub-linux-amd64-2.14.1/bin/hub /usr/bin/
       cd caophim
       export TAG="nightly-$(git rev-parse HEAD)"
-      hub release create -a caophim.tar.gz "$TAG" -m "Nightly $TAG" --prerelease
+      hub release create -a caophim.tar.gz "$TAG" -m "$TAG" --prerelease
 
   ## Builds.sr.ht doesn't support tag or even branch detection yet:
   ## > https://todo.sr.ht/~sircmpwn/builds.sr.ht/170
