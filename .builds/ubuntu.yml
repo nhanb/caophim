@@ -63,8 +63,7 @@ tasks:
       export TAG="v0.$(date +'%Y.%m.%d-%H%M')"
       hub release create -a caophim-linux64.tar.gz "$TAG" -m "$TAG"
 
-      # I have no idea why this is not working yet but it's not:
-      ssh -vvv -i ~/.ssh/6166d74e-9ca5-43f1-af92-1254f82c747f ubuntu@caophim.net "
+      ssh -i ~/.ssh/6166d74e-9ca5-43f1-af92-1254f82c747f ubuntu@caophim.net "
         wget -O caophim-linux64.tar.gz https://github.com/nhanb/caophim/releases/download/${TAG}/caophim-linux64.tar.gz
         tar -xf caophim-linux64.tar.gz
         sudo systemctl restart caophim
