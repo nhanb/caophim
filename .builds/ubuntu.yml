@@ -39,37 +39,27 @@ tasks:
       cp -r aws caophim-dist/aws
       cp config.ini.example caophim-dist/
       cp bin/* caophim-dist/
-      tar -czvf caophim.tar.gz caophim-dist
+      tar -czvf caophim-linux64.tar.gz caophim-dist
 
-  - release-nightly: |
+  # Builds.sr.ht doesn't support tag or even branch detection yet:
+  # > https://todo.sr.ht/~sircmpwn/builds.sr.ht/170
+  - check-release: |
+      cd caophim
+      export BRANCH=$(git rev-parse --abbrev-ref HEAD)
+      if [ "$(git rev-parse master)" == "$(git rev-parse HEAD)" ]; then
+        echo "Is master. Proceeding to release."
+      else
+        complete-build
+      fi
+
+  - release: |
       # download & setup the `hub` client
       curl -L 'https://github.com/github/hub/releases/download/v2.14.1/hub-linux-amd64-2.14.1.tgz' -o hub.tgz
       tar -xf hub.tgz
       sudo cp hub-linux-amd64-2.14.1/bin/hub /usr/bin/
       cd caophim
-      export TAG="nightly-$(date +"%Y-%m-%d-%I%M%p")-$(git rev-parse --short HEAD)"
-      hub release create -a caophim.tar.gz "$TAG" -m "$TAG" --prerelease
-
-  ## Builds.sr.ht doesn't support tag or even branch detection yet:
-  ## > https://todo.sr.ht/~sircmpwn/builds.sr.ht/170
-  #- check-release: |
-      #cd caophim
-      #export TAG=$(git describe --tags)
-      #if [ -z "$TAG" ]
-      #then
-        #complete-build
-      #else
-        #echo "Tag detected."
-      #fi
-
-  #- release: |
-      ## download & setup the `hub` client
-      #curl -L 'https://github.com/github/hub/releases/download/v2.14.1/hub-linux-amd64-2.14.1.tgz' -o hub.tgz
-      #tar -xf hub.tgz
-      #sudo cp hub-linux-amd64-2.14.1/bin/hub /usr/bin/
-      #cd caophim
-      #export TAG=$(git describe --tags)
-      #hub release create -a caophim.tar.gz "$TAG" -m "Released $TAG"
+      export TAG="v0.$(date +'%Y.%m.%d-%H%M')"
+      hub release create -a caophim-linux64.tar.gz "$TAG" -m "$TAG"
 
 
 artifacts:
