@@ -47,7 +47,7 @@ tasks:
       tar -xf hub.tgz
       sudo cp hub-linux-amd64-2.14.1/bin/hub /usr/bin/
       cd caophim
-      export TAG="nightly-$(git rev-parse HEAD)"
+      export TAG="nightly-$(date +"%Y-%m-%d-%I%M%p")-$(git rev-parse --short HEAD)"
       hub release create -a caophim.tar.gz "$TAG" -m "$TAG" --prerelease
 
   ## Builds.sr.ht doesn't support tag or even branch detection yet:
