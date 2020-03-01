@@ -256,10 +256,14 @@ proc getThreads*(db: DbConn, board: Board): seq[Thread] =
   let rows = db.getAllRows(sql"""
   SELECT
     id, pic_format, content, parsed_content, created_at,
-    (SELECT count(*) from reply where reply.thread_id = thread.id) as num_replies
+    (SELECT count(*) from reply where reply.thread_id = thread.id) as num_replies,
+    COALESCE (
+      (SELECT max(id) from reply where reply.thread_id = thread.id),
+      id
+    ) as last_reply_or_thread_id
   FROM thread
   WHERE board_slug = ?
-  ORDER BY id DESC
+  ORDER BY last_reply_or_thread_id DESC
   LIMIT 50;
   """, board.slug)
   return rows.map(proc(r: seq[string]) : Thread =
