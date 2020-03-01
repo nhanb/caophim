@@ -64,7 +64,7 @@ tasks:
       hub release create -a caophim-linux64.tar.gz "$TAG" -m "$TAG"
 
   - deploy: |
-      ssh -t -i ~/.ssh/6166d74e-9ca5-43f1-af92-1254f82c747f caophim.net /bin/bash << EOF
+      ssh -i ~/.ssh/6166d74e-9ca5-43f1-af92-1254f82c747f caophim.net /bin/bash << EOF
         wget -O caophim-linux64.tar.gz "https://github.com/nhanb/caophim/releases/download/${TAG}/caophim-linux64.tar.gz"
         tar -xf caophim-linux64.tar.gz
         sudo systemctl restart caophim
