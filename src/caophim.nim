@@ -105,7 +105,7 @@ routes:
       tfd.content
     )
     try:
-      await savePic(tfd.pic.blob, fmt"{threadId}.{tfd.pic.format}")
+      await savePic(tfd.pic.blob, $threadId, $tfd.pic.format)
     except:
       db.deleteThread(threadId)
       resp Http500, "Failed to upload pic."
@@ -207,7 +207,7 @@ routes:
     if rfd.pic.isSome():
       let pic = rfd.pic.get()
       try:
-        await savePic(pic.blob, fmt"{replyId}.{pic.format}")
+        await savePic(pic.blob, $replyId, $pic.format)
       except:
         db.deleteReply(replyId)
         resp Http500, "Failed to upload pic."

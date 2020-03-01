@@ -10,11 +10,11 @@ proc createPicsDirs*() =
   discard existsOrCreateDir(PICS_DIR)
 
 
-proc savePic*(blob: string, filename: string) {.async} =
-  var file = openAsync(PICS_DIR / filename, fmReadWrite)
+proc savePic*(blob: string, filename: string, format: string) {.async} =
+  var file = openAsync(PICS_DIR / fmt"{filename}.{format}", fmReadWrite)
   await file.write(blob)
   file.close()
 
 
-proc getPostPicUrl*(filename: string): string =
-  return fmt"/pics/{filename}"
+proc getPostPicUrl*(fullFileName: string): string =
+  return fmt"/pics/{fullFileName}"

@@ -8,8 +8,8 @@ proc createPicsDirs*() =
   discard existsOrCreateDir(PICS_DIR)
 
 
-proc savePic*(blob: string, filename: string) {.async} =
-  let localFilePath = PICS_DIR / filename
+proc savePic*(blob: string, filename: string, format: string) {.async} =
+  let localFilePath = PICS_DIR / fmt"{filename}.{format}"
 
   # Save file to disk locally
   var file = openAsync(localFilePath, fmReadWrite)
@@ -22,7 +22,7 @@ proc savePic*(blob: string, filename: string) {.async} =
   let uploadCmd = (
     "export AWS_SHARED_CREDENTIALS_FILE=aws/credentials && " &
     fmt"aws s3 --endpoint-url='https://s3.{conf.s3.region}.{conf.s3.host}' " &
-    fmt"cp '{localFilePath}' 's3://{conf.s3.bucket}/'"
+    fmt"cp '{localFilePath}' 's3://{conf.s3.bucket}/' --content-type image/{format}"
   )
   echo uploadCmd
   let errC = execShellCmd(uploadCmd)
@@ -33,5 +33,5 @@ proc savePic*(blob: string, filename: string) {.async} =
     removeFile(localFilePath)
 
 
-proc getPostPicUrl*(filename: string): string =
-  return fmt"https://{conf.s3.bucket}/{filename}"
+proc getPostPicUrl*(fullFileName: string): string =
+  return fmt"https://{conf.s3.bucket}/{fullFileName}"
