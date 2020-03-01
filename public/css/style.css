@@ -122,7 +122,14 @@ strong,
 }
 .thread-header .links,
 .reply-header .links {
-  /* todo */
+  font-weight: normal;
+}
+.thread-header {
+  color: brown;
+  font-weight: bold;
+}
+.reply-header {
+  color: darkolivegreen;
 }
 .thread-content,
 .reply-content {
@@ -164,4 +171,36 @@ strong,
 
 .greentext {
   color: green;
+}
+
+/* Phoneposting support: */
+@media (max-width: 550px) {
+  .thread,
+  .reply {
+    padding: 5px;
+
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "header"
+      "pic"
+      "content";
+  }
+
+  .thread-pic-anchor,
+  .reply-pic-anchor {
+    width: 100%;
+    text-align: left;
+  }
+
+  form {
+    grid-template-columns: auto;
+    grid-auto-rows: auto;
+  }
+  form > label {
+    display: none;
+  }
+  form > button[type="submit"] {
+    grid-column: 1/1;
+    max-width: 200px;
+  }
 }
