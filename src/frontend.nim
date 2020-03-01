@@ -36,6 +36,8 @@ proc renderContentNode(node: ContentNode, thread: Thread): VNode =
       elif $node.linkPostId == thread.id: "op-link"
       else: ""
     return buildHtml(a(href=node.linkHref, class=class)): text node.linkText
+  of Hyperlink:
+    return buildHtml(a(href=node.url)): text node.url
 
 
 proc renderContent(

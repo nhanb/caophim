@@ -33,7 +33,8 @@ type
     Br,
     Text,
     Quote,
-    Link
+    Link,
+    Hyperlink
   ContentNode* = object
     case kind*: ContentNodeKind
     of P: pChildren*: seq[ContentNode]
@@ -46,6 +47,7 @@ type
       linkType*: PostType
       linkPostId*: int64
       linkThreadId*: int64
+    of Hyperlink: url*: string
 
 proc getDbConn*(): DbConn =
   let db = open(DB_FILE_NAME, "", "", "")
@@ -194,6 +196,9 @@ proc processContent*(db: DbConn, content: string, postId: int64) =
 
       elif line.match(re(r"^>.+$")):
         p.pChildren.add(ContentNode(kind: Quote, quoteStr: line))
+
+      elif line.match(re(r"^https?://")):
+        p.pChildren.add(ContentNode(kind: Hyperlink, url: line))
 
       else:
         p.pChildren.add(ContentNode(kind: Text, textStr: line))
