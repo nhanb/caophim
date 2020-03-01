@@ -3,6 +3,8 @@ image: ubuntu/bionic
 secrets:
   - 42bb7f41-956c-4cb8-a685-2fa6e59f5f14
   - 63991352-48fc-43df-acb7-697c7f43c77b
+  - 79d42130-a326-4eb1-9195-6034eb5d6d82
+  - 6166d74e-9ca5-43f1-af92-1254f82c747f
 
 packages:
   - curl
@@ -60,6 +62,13 @@ tasks:
       cd caophim
       export TAG="v0.$(date +'%Y.%m.%d-%H%M')"
       hub release create -a caophim-linux64.tar.gz "$TAG" -m "$TAG"
+
+  - deploy: |
+      ssh -t -i ~/.ssh/6166d74e-9ca5-43f1-af92-1254f82c747f caophim /bin/bash << EOF
+        wget -O caophim-linux64.tar.gz "https://github.com/nhanb/caophim/releases/download/${TAG}/caophim-linux64.tar.gz"
+        tar -xf caophim-linux64.tar.gz
+        sudo systemctl restart caophim
+      EOF
 
 
 artifacts:
