@@ -17,7 +17,7 @@ tasks:
       echo -e "\nHost github.com\n  IdentityFile /home/build/.ssh/42bb7f41-956c-4cb8-a685-2fa6e59f5f14\n  IdentitiesOnly yes\n  BatchMode yes" >> ~/.ssh/config
       echo "github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==" >> ~/.ssh/known_hosts
       git remote add github git@github.com:nhanb/caophim.git
-      git push -f github '*:*' --prune --follow-tags
+      git push -f github '*:*' --follow-tags
 
   - build: |
       curl -L 'https://github.com/nim-lang/nightlies/releases/download/2020-02-24-devel-3dad130/nim-1.1.1-linux_x64.tar.xz' -o nim.tar.xz
@@ -54,7 +54,7 @@ tasks:
         complete-build
       fi
 
-  - release: |
+  - release-and-deploy: |
       # download & setup the `hub` client
       curl -L 'https://github.com/github/hub/releases/download/v2.14.1/hub-linux-amd64-2.14.1.tgz' -o hub.tgz
       tar -xf hub.tgz
@@ -63,13 +63,12 @@ tasks:
       export TAG="v0.$(date +'%Y.%m.%d-%H%M')"
       hub release create -a caophim-linux64.tar.gz "$TAG" -m "$TAG"
 
-  - deploy: |
-      ssh -i ~/.ssh/6166d74e-9ca5-43f1-af92-1254f82c747f caophim.net "
+      # I have no idea why this is not working yet but it's not:
+      ssh -vvv -i ~/.ssh/6166d74e-9ca5-43f1-af92-1254f82c747f ubuntu@caophim.net "
         wget -O caophim-linux64.tar.gz https://github.com/nhanb/caophim/releases/download/${TAG}/caophim-linux64.tar.gz
         tar -xf caophim-linux64.tar.gz
         sudo systemctl restart caophim
       "
-
 
 artifacts:
   - caophim/caophim.tar.gz
