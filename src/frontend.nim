@@ -84,7 +84,7 @@ proc renderReply(db: DbConn, reply: Reply, thread: Thread): VNode =
       a(href=picUrl, class="reply-pic-anchor"):
         img(class="reply-pic", src=picUrl)
     else:
-      a(class="reply-pic-anchor"): text "[text only]"
+      a(class="reply-pic-anchor text-only"): text "[text only]"
 
     tdiv(class="reply-header"):
       a(href=fmt"#{reply.id}", class="permalink"):

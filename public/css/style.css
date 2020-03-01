@@ -130,6 +130,7 @@ strong,
 }
 .reply-header {
   color: darkolivegreen;
+  font-weight: bold;
 }
 .thread-content,
 .reply-content {
@@ -175,9 +176,26 @@ strong,
 
 /* Phoneposting support: */
 @media (max-width: 550px) {
+  body {
+    padding: 0;
+  }
+  h1 {
+    border: none;
+  }
+  h2 {
+    margin: 0 10px 10px 10px;
+  }
+  .boards {
+    border-left: 0;
+    border-right: 0;
+  }
   .thread,
   .reply {
-    padding: 5px;
+    margin: 0;
+    padding: 10px 0;
+    border-left: 0;
+    border-right: 0;
+    border-color: burlywood;
 
     grid-template-columns: 1fr;
     grid-template-areas:
@@ -186,15 +204,40 @@ strong,
       "content";
   }
 
-  .thread-pic-anchor,
-  .reply-pic-anchor {
-    width: 100%;
-    text-align: left;
+  .reply {
+    border-top: 0;
+  }
+  .thread + .thread {
+    border-top: 0;
   }
 
-  form {
+  .thread-pic-anchor,
+  .reply-pic-anchor {
+    width: auto;
+    text-align: left;
+  }
+  .thread-pic-anchor img,
+  .reply-pic-anchor img {
+    border-left: 0;
+    border-right: 0;
+    border: 0;
+  }
+
+  .thread-header,
+  .reply-header,
+  .thread-content,
+  .reply-content,
+  .reply-pic-anchor.text-only {
+    margin: 0 10px;
+  }
+
+  .create-thread-form,
+  .create-reply-form {
     grid-template-columns: auto;
     grid-auto-rows: auto;
+    border-left: 0;
+    border-right: 0;
+    border-color: burlywood;
   }
   form > label {
     display: none;
