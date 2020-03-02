@@ -75,7 +75,6 @@ strong,
 
 .thread,
 .reply {
-  padding: 3px;
   margin: 10px 0;
 
   display: grid;
@@ -99,11 +98,20 @@ strong,
 .reply-pic-anchor:hover {
   text-decoration: none;
 }
+.thread-pic-anchor.text-only,
+.reply-pic-anchor.text-only {
+  margin-left: 10px;
+}
 .thread-pic-anchor > img,
 .reply-pic-anchor > img {
   display: block;
   width: 100%;
-  border: var(--border);
+}
+.thread-pic-anchor > img {
+  border-right: 1px solid chocolate;
+}
+.reply-pic-anchor > img {
+  border-right: 1px solid burlywood;
 }
 .thread-header,
 .reply-header {

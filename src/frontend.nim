@@ -16,6 +16,7 @@ proc wrapHtml*(element: VNode, pageTitle: string = ""): string =
       link(rel="stylesheet", href="/css/style.css")
     body:
       element
+      script(src="/js/main.js")
 
   return "<!DOCTYPE html>\n" & $html
 
@@ -75,7 +76,7 @@ proc renderThread*(db: DbConn, thread: Thread): VNode =
           else: text "replies"
       renderLinks(thread.boardSlug, thread.id, links)
     a(href=picUrl, class="thread-pic-anchor"):
-      img(class="thread-pic", src=thumbUrl)
+      img(class="thread-pic", src=thumbUrl, thumbsrc=thumbUrl, picsrc=picUrl)
     renderContent("thread-content", thread.parsedContent, thread)
 
 
@@ -92,7 +93,7 @@ proc renderReply(db: DbConn, reply: Reply, thread: Thread): VNode =
       let picUrl = getPostPicUrl(reply.id, $reply.pic_format.get())
       let thumbUrl = getPostThumbUrl(reply.id, $reply.pic_format.get())
       a(href=picUrl, class="reply-pic-anchor"):
-        img(class="reply-pic", src=thumbUrl)
+        img(class="reply-pic", src=thumbUrl, thumbsrc=thumbUrl, picsrc=picUrl)
     else:
       a(class="reply-pic-anchor text-only"): text "[text only]"
 
