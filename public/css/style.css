@@ -107,12 +107,6 @@ strong,
   display: block;
   width: 100%;
 }
-.thread-pic-anchor > img {
-  border-right: 1px solid chocolate;
-}
-.reply-pic-anchor > img {
-  border-right: 1px solid burlywood;
-}
 .thread-header,
 .reply-header {
   grid-area: header;
