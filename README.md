@@ -34,13 +34,18 @@ problem with sqlite](https://www.sqlite.org/np1queryprob.html).
 
 ## Server setup
 
-Dependencies:
+### Dependencies:
+
+ImageMagick: ubuntu bionic only has magick 6.9 which doesn't support webp (7.0
+does). Do something like this:
 
 ```sh
-sudo apt install imagemagick
+sudo wget 'https://imagemagick.org/download/binaries/magick' /usr/bin/magick
+sudo chmod +x /usr/bin/magick
+sudo apt install libsm-dev # imagemagick's dependency
 ```
 
-S3:
+### S3:
 
 - create your bucket and access id - secret pair
 - `cp aws/credentials-example aws/credentials`
