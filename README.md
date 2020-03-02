@@ -36,14 +36,23 @@ problem with sqlite](https://www.sqlite.org/np1queryprob.html).
 
 ### Dependencies:
 
-ImageMagick: ubuntu bionic only has magick 6.9 which doesn't support webp (7.0
-does). Do something like this:
+ImageMagick: the version that comes with Ubuntu 18.04 doesn't support webp
+(even with libwebp-dev installed) for some reason. Compile from source like
+this:
 
 ```sh
-sudo wget 'https://imagemagick.org/download/binaries/magick' /usr/bin/magick
-sudo chmod +x /usr/bin/magick
-sudo apt install libsm-dev # imagemagick's dependency
+sudo apt install libwebp-dev
+sudo apt build-dep imagemagick
+
+wget 'https://github.com/ImageMagick/ImageMagick/archive/7.0.9-27.tar.gz'
+tar -xf 7.0.9-27.tar.gz
+cd ImageMagick-7.0.9-27
+./configure
+make
+sudo make install
 ```
+
+I'm _really really_ tempted to just spin up an Arch server and be done with it.
 
 ### S3:
 
