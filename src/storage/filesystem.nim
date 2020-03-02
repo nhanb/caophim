@@ -1,9 +1,7 @@
 import asyncfile, os, asyncdispatch, strformat
+import ../imgprocessing
 
 const PICS_DIR = "public" / "pics"
-
-# TODO: probably should move all thread/reply pics path related logic into this
-# module.
 
 
 proc createPicsDirs*() =
@@ -15,6 +13,11 @@ proc savePic*(blob: string, filename: string, format: string) {.async} =
   await file.write(blob)
   file.close()
 
+  discard createThumbnail(PICS_DIR, filename, format)
 
-proc getPostPicUrl*(fullFileName: string): string =
-  return fmt"/pics/{fullFileName}"
+
+proc getPostPicUrl*(postId: string, picFormat: string): string =
+  return fmt"/pics/{postId}.{picFormat}"
+
+proc getPostThumbUrl*(postId: string, picFormat: string): string =
+  return fmt"/pics/{postId}.thumb.{picFormat}"

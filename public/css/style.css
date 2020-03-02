@@ -88,7 +88,6 @@ strong,
 }
 .thread-pic-anchor,
 .reply-pic-anchor {
-  width: 200px;
   grid-area: pic;
   align-self: start;
   text-decoration: none;
@@ -192,16 +191,12 @@ strong,
   .thread,
   .reply {
     margin: 0;
-    padding: 10px 0;
+    padding: 5px 0;
     border-left: 0;
     border-right: 0;
     border-color: burlywood;
 
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "header"
-      "pic"
-      "content";
+    display: block;
   }
 
   .reply {
@@ -211,11 +206,6 @@ strong,
     border-top: 0;
   }
 
-  .thread-pic-anchor,
-  .reply-pic-anchor {
-    width: auto;
-    text-align: left;
-  }
   .thread-pic-anchor img,
   .reply-pic-anchor img {
     border-left: 0;
@@ -227,8 +217,21 @@ strong,
   .reply-header,
   .thread-content,
   .reply-content,
-  .reply-pic-anchor.text-only {
+  .reply-pic-anchor,
+  .thread-pic-anchor {
     margin: 0 10px;
+  }
+
+  .no-replies {
+    margin: 10px 0 0 10px;
+  }
+
+  .thread-pic-anchor,
+  .reply-pic-anchor {
+    width: auto;
+    text-align: left;
+    display: inline-block;
+    margin-top: 5px;
   }
 
   .create-thread-form,

@@ -58,11 +58,10 @@ proc renderLinks(boardSlug: string, threadId: string, linkingIds: seq[int64]): V
 
 
 proc renderThread*(db: DbConn, thread: Thread): VNode =
-  let picUrl = getPostPicUrl(fmt"{thread.id}.{thread.pic_format}")
+  let picUrl = getPostPicUrl(thread.id, $thread.pic_format)
+  let thumbUrl = getPostThumbUrl(thread.id, $thread.pic_format)
   let links = db.getLinks(thread)
   return buildHtml(tdiv(class="thread")):
-    a(href=picUrl, class="thread-pic-anchor"):
-      img(class="thread-pic", src=picUrl)
     tdiv(class="thread-header"):
       a(href=fmt"/{thread.boardSlug}/{thread.id}/", id=thread.id, class="permalink"):
         text "/" & thread.id & "/"
@@ -75,24 +74,28 @@ proc renderThread*(db: DbConn, thread: Thread): VNode =
           if num == 1: text "reply"
           else: text "replies"
       renderLinks(thread.boardSlug, thread.id, links)
+    a(href=picUrl, class="thread-pic-anchor"):
+      img(class="thread-pic", src=thumbUrl)
     renderContent("thread-content", thread.parsedContent, thread)
 
 
 proc renderReply(db: DbConn, reply: Reply, thread: Thread): VNode =
   let links = db.getLinks(reply)
   return buildHtml(tdiv(class="reply", id = $reply.id)):
-    if reply.picFormat.isSome():
-      let picUrl = getPostPicUrl(fmt"{reply.id}.{reply.pic_format.get()}")
-      a(href=picUrl, class="reply-pic-anchor"):
-        img(class="reply-pic", src=picUrl)
-    else:
-      a(class="reply-pic-anchor text-only"): text "[text only]"
-
     tdiv(class="reply-header"):
       a(href=fmt"#{reply.id}", class="permalink"):
         text fmt"#{reply.id}"
       time(datetime=reply.createdAt & "+00:00"): text reply.createdAt & " UTC"
       renderLinks(thread.boardSlug, thread.id, links)
+
+    if reply.picFormat.isSome():
+      let picUrl = getPostPicUrl(reply.id, $reply.pic_format.get())
+      let thumbUrl = getPostThumbUrl(reply.id, $reply.pic_format.get())
+      a(href=picUrl, class="reply-pic-anchor"):
+        img(class="reply-pic", src=thumbUrl)
+    else:
+      a(class="reply-pic-anchor text-only"): text "[text only]"
+
     renderContent("reply-content", reply.parsedContent, thread)
 
 proc renderReplies*(db: DbConn, replies: seq[Reply], thread: Thread): VNode =
@@ -100,4 +103,4 @@ proc renderReplies*(db: DbConn, replies: seq[Reply], thread: Thread): VNode =
     for reply in replies:
       db.renderReply(reply, thread)
     if len(replies) == 0:
-      p(): text "No replies yet."
+      p(class="no-replies"): text "No replies yet."

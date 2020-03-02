@@ -4,7 +4,7 @@ Goals:
 
 - Simple to deploy: should be a single executable that uses an sqlite3 db. Put
   it behind a TLS-terminating reverse proxy like nginx or caddy and you're in
-  business. Optional s3-like storage support is planned.
+  business. Optional s3-like storage is supported.
 
 - Simple to use: UI should be minimal and functional even with JS disabled.
   [textboard](http://textboard.org/) is a huge inspiration.
@@ -33,6 +33,12 @@ problem with sqlite](https://www.sqlite.org/np1queryprob.html).
 # Usage
 
 ## Server setup
+
+Dependencies:
+
+```sh
+sudo apt install imagemagick
+```
 
 S3:
 
