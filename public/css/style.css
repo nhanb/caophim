@@ -159,7 +159,8 @@ strong,
   background-color: floralwhite;
   border: 1px solid burlywood;
 }
-.reply:target {
+.reply:target,
+.thread:target {
   background-color: lightcyan;
 }
 

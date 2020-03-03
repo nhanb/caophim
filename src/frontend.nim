@@ -62,9 +62,9 @@ proc renderThread*(db: DbConn, thread: Thread): VNode =
   let picUrl = getPostPicUrl(thread.id, $thread.pic_format)
   let thumbUrl = getPostThumbUrl(thread.id, $thread.pic_format)
   let links = db.getLinks(thread)
-  return buildHtml(tdiv(class="thread")):
+  return buildHtml(tdiv(class="thread", id=thread.id)):
     tdiv(class="thread-header"):
-      a(href=fmt"/{thread.boardSlug}/{thread.id}/", id=thread.id, class="permalink"):
+      a(href=fmt"/{thread.boardSlug}/{thread.id}/#{thread.id}", class="permalink"):
         text "/" & thread.id & "/"
       time(datetime=thread.createdAt & "+00:00"): text thread.createdAt & " UTC"
       if thread.numReplies.isSome():
