@@ -27,7 +27,7 @@ proc renderContentNode(node: ContentNode, thread: Thread): VNode =
     return buildHtml(p):
       for child in node.pChildren:
         renderContentNode(child, thread)
-  of Br: return verbatim("<br />")
+  of Br: return buildHtml(br())
   of Text: return text node.textStr
   of Quote:
     return buildHtml(span(class="greentext")): text node.quoteStr
