@@ -1,4 +1,4 @@
-import db_sqlite, sequtils, sugar, options, strutils, re, json, strformat
+import db_sqlite, sequtils, sugar, options, strutils, re, json, strformat, uri
 import imgformat
 
 const DB_FILE_NAME = "db.sqlite3"
@@ -34,7 +34,8 @@ type
     Text,
     Quote,
     Link,
-    Hyperlink
+    Hyperlink,
+    YoutubeLink
   ContentNode* = object
     case kind*: ContentNodeKind
     of P: pChildren*: seq[ContentNode]
@@ -48,6 +49,7 @@ type
       linkPostId*: int64
       linkThreadId*: int64
     of Hyperlink: url*: string
+    of YoutubeLink: ytid*: string
 
 proc getDbConn*(): DbConn =
   let db = open(DB_FILE_NAME, "", "", "")
@@ -198,7 +200,22 @@ proc processContent*(db: DbConn, content: string, postId: int64) =
         p.pChildren.add(ContentNode(kind: Quote, quoteStr: line))
 
       elif line.match(re(r"^https?://")):
-        p.pChildren.add(ContentNode(kind: Hyperlink, url: line))
+        let uri = parseUri(line)
+
+        var youtubeId: string = ""
+        if uri.hostname in ["youtube.com", "www.youtube.com"] and uri.query != "":
+          for part in uri.query.split('&'):
+            let pair = part.split('=')
+            if pair[0] == "v":
+              youtubeId = pair[1]
+              break
+        elif uri.hostname == "youtu.be" and uri.path.len > 1 and not ('/' in uri.path[1..^1]):
+          youtubeId = uri.path[1..^1]
+
+        if youtubeId != "":
+          p.pChildren.add(ContentNode(kind: YoutubeLink, ytid: youtubeId))
+        else:
+          p.pChildren.add(ContentNode(kind: Hyperlink, url: line))
 
       else:
         p.pChildren.add(ContentNode(kind: Text, textStr: line))

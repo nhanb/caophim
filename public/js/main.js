@@ -33,3 +33,24 @@ document
       event.preventDefault();
     });
   });
+
+// Create button to activate Youtube iframe player
+document.querySelectorAll(".youtube-wrapper").forEach(wrapper => {
+  let youtubeId = wrapper.firstChild.getAttribute("ytid");
+  let btn = document.createElement("a");
+  btn.innerHTML = "↳load player";
+  btn.setAttribute("class", "load-player-button");
+  wrapper.appendChild(btn);
+  btn.onclick = () => {
+    let iframe = document.createElement("iframe");
+    iframe.setAttribute(
+      "src",
+      `https://www.youtube-nocookie.com/embed/${youtubeId}`
+    );
+    iframe.setAttribute("allowfullscreen", "allowfullscreen");
+    iframe.setAttribute("class", "youtube-iframe");
+    wrapper.appendChild(document.createElement("br"));
+    wrapper.appendChild(iframe);
+    btn.remove();
+  };
+});

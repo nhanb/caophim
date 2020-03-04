@@ -176,6 +176,19 @@ strong,
   color: green;
 }
 
+.youtube-iframe {
+  width: 480px;
+  height: 270px;
+  max-width: 100%;
+}
+.load-player-button {
+  font-size: 90%;
+  color: darkgoldenrod;
+  margin: 0 5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 /* Phoneposting support: */
 @media (max-width: 550px) {
   body {

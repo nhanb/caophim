@@ -39,6 +39,10 @@ proc renderContentNode(node: ContentNode, thread: Thread): VNode =
     return buildHtml(a(href=node.linkHref, class=class)): text node.linkText
   of Hyperlink:
     return buildHtml(a(href=node.url)): text node.url
+  of YoutubeLink:
+    let url = fmt"https://youtu.be/{node.ytid}"
+    return buildHtml(span(class="youtube-wrapper")):
+      a(href=url, class="youtube-link", ytid=node.ytid): text url
 
 
 proc renderContent(
