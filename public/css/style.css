@@ -187,6 +187,7 @@ strong,
   margin: 0 5px;
   cursor: pointer;
   white-space: nowrap;
+  user-select: none;
 }
 
 /* Phoneposting support: */
