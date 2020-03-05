@@ -143,8 +143,8 @@ routes:
 
     let content = thread.content
     var titleText = content[0..min(80, content.len - 1)]
-    if "\c\n" in titleText:
-      titleText = titleText[0..titleText.find("\c\n")-1]
+    if "\n" in titleText:
+      titleText = titleText[0..titleText.find("\n")-1]
     elif titleText.len < content.len:
       titleText.add("...")
 

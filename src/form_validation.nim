@@ -1,4 +1,4 @@
-import options, strutils
+import options, strutils, re
 import jester
 import imgformat
 
@@ -19,6 +19,14 @@ type
   UnsupportedImageFormat* = object of Exception
 
 
+proc cleanUp(content: string): string =
+  # 1. Strip
+  # 2. Convert windows-style newlines into unix style
+  #    (per html spec, textarea form input always submits win-style newlines)
+  # 3. Truncate 3-or-more consecutive newlines
+  return content.strip().replace(re"\r\n", "\n").replace(re"\n\n(\n)+", "\n\n")
+
+
 proc validateThreadFormData*(request: Request): ThreadFormData =
   let picBlob: string = request.formData["pic"].body
   let picFormat: ImageFormat = getPicFormat(picBlob[0..IMGFORMAT_MAX_BYTES_USED])
@@ -27,7 +35,7 @@ proc validateThreadFormData*(request: Request): ThreadFormData =
 
   return ThreadFormData(
     pic: Pic(blob: picBlob, format: picFormat),
-    content: request.formData["content"].body.strip(),
+    content: cleanUp(request.formData["content"].body),
   )
 
 
@@ -46,5 +54,5 @@ proc validateReplyFormData*(request: Request): ReplyFormData =
 
   return ReplyFormData(
     pic: picOpt,
-    content: request.formData["content"].body.strip(),
+    content: cleanUp(request.formData["content"].body),
   )

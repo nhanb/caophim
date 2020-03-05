@@ -126,14 +126,7 @@ proc seedBoards*(db: DbConn) =
   """)
 
 
-proc processContent*(db: DbConn, content: string, postId: int64) =
-  # Convert windows-style newlines into unix style:
-  # (per html spec, textarea form input always submits win-style newlines)
-  var c = content.replace(re"\r\n", "\n")
-
-  # Truncate 3-or-more consecutive newlines
-  c = c.replace(re"\n\n(\n)+", "\n\n")
-
+proc processContent*(db: DbConn, c: string, postId: int64) =
   var nodes: seq[ContentNode]
 
   # Poor man's parser into the simplest node graph we can get away with, just
