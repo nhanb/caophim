@@ -57,7 +57,49 @@ function youtubePlayer() {
   });
 }
 
+function pasteablePic() {
+  const imgTypes = [
+    "image/gif",
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp"
+  ];
+  document
+    .querySelectorAll(".create-thread-form, .create-reply-form")
+    .forEach(form => {
+      const fileInput = form.querySelector("input[type=file]");
+      const previewImg = form.querySelector("img");
+
+      const updatePreviewImg = () => {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          previewImg.src = e.target.result;
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+      };
+
+      // In case of refresh/back and browser still keeps the file input:
+      if (fileInput.files.length === 1) {
+        updatePreviewImg();
+      }
+
+      // When user clicks on the file input and chooses a file normally:
+      fileInput.addEventListener("change", updatePreviewImg);
+
+      // Now the actual on clipboard paste handler:
+      form.addEventListener("paste", e => {
+        const files = e.clipboardData.files;
+        if (files.length === 1 && imgTypes.includes(files[0].type)) {
+          fileInput.files = files;
+          updatePreviewImg();
+        }
+      });
+    });
+}
+
 window.addEventListener("DOMContentLoaded", event => {
   toggleableThumbnails();
   youtubePlayer();
+  pasteablePic();
 });

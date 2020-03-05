@@ -75,7 +75,9 @@ routes:
           placeholder="Create new thread here"
         ): text ""
         label(): text "Pic:"
-        input(`type`="file", name="pic", id="create-thread-pic", required="true")
+        tdiv(class="pic-input-wrapper"):
+          input(`type`="file", name="pic", id="create-thread-pic", required="true")
+          img(class="pic-preview", src="")
         button(`type`="submit"): text "Create thread"
 
     resp wrapHtml(body, fmt"/{slug}/")
@@ -174,7 +176,9 @@ routes:
           placeholder="Reply here"
         ): text ""
         label(): text "Pic (optional):"
-        input(`type`="file", name="pic", id="create-reply-pic")
+        tdiv(class="pic-input-wrapper"):
+          input(`type`="file", name="pic", id="create-reply-pic")
+          img(class="pic-preview", src="")
         button(`type`="submit"): text "Reply"
 
     resp wrapHtml(body, titleText)
