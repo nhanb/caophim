@@ -127,8 +127,12 @@ proc seedBoards*(db: DbConn) =
 
 
 proc processContent*(db: DbConn, content: string, postId: int64) =
+  # Convert windows-style newlines into unix style:
+  # (per html spec, textarea form input always submits win-style newlines)
+  var c = content.replace(re"\r\n", "\n")
+
   # Truncate 3-or-more consecutive newlines
-  let c = content.replace(re"\r\n\r\n(\r\n)+", "\c\n\c\n")
+  c = c.replace(re"\n\n(\n)+", "\n\n")
 
   var nodes: seq[ContentNode]
 
@@ -137,10 +141,10 @@ proc processContent*(db: DbConn, content: string, postId: int64) =
   #
   # Also populate the `link` db table, so we can query "this post is quoted by
   # which other posts"
-  for paragraph in c.split("\c\n\c\n"):
+  for paragraph in c.split("\n\n"):
     var p = ContentNode(kind: P)
 
-    for line in paragraph.split("\c\n"):
+    for line in paragraph.split("\n"):
       if line.match(re(r"^>>\d+$")):
         var linkedId: int64 = 0
         try:
