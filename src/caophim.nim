@@ -20,7 +20,7 @@ routes:
     let body = buildHtml(tdiv):
       h1():
         a(href="/"): text "caophim"
-        text "/"
+        text " /"
       h2(): text "Pick your poison:"
       tdiv(class="boards"):
         for board in boards:
@@ -44,7 +44,10 @@ routes:
 
       h1():
         a(href="/"): text "caophim"
-        text fmt"/{slug}/ - {board.name}"
+        text " / "
+        a(href=fmt"/{slug}/"): text fmt"{slug}"
+        text " / "
+        text fmt" - {board.name}"
 
       if len(threads) == 0:
         h2(): text "No threads yet."
@@ -149,9 +152,11 @@ routes:
     let body = buildHtml(tdiv):
       h1():
         a(href="/"): text "caophim"
-        text "/"
+        text " / "
         a(href=fmt"/{slug}/"): text fmt"{slug}"
-        text fmt"/{thread.id}/ - {titleText}"
+        text " / "
+        a(href=fmt"/{slug}/{thread.id}/"): text fmt"{thread.id}"
+        text fmt" / - {titleText}"
       db.renderThread(thread)
       db.renderReplies(replies, thread=thread)
       form(
