@@ -12,7 +12,7 @@ a:hover {
 
 body {
   font-family: sans-serif;
-  font-size: 1rem;
+  font-size: 0.9rem;
   line-height: 1.4;
   padding: 5px;
   background-color: cornsilk;
@@ -142,7 +142,7 @@ strong,
 }
 .thread-content > p,
 .reply-content > p {
-  margin-bottom: 1rem;
+  margin-bottom: 0.8rem;
 }
 .thread-content > p:last-of-type,
 .reply-content > p:last-of-type {
