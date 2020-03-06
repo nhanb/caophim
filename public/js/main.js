@@ -98,8 +98,17 @@ function pasteablePic() {
     });
 }
 
+function preventDoubleSubmit() {
+  document.querySelectorAll("button[type=submit]").forEach(el => {
+    el.addEventListener("click", () => {
+      el.disabled = true;
+    });
+  });
+}
+
 window.addEventListener("DOMContentLoaded", event => {
   toggleableThumbnails();
   youtubePlayer();
   pasteablePic();
+  preventDoubleSubmit();
 });
