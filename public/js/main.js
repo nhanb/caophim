@@ -99,9 +99,9 @@ function pasteablePic() {
 }
 
 function preventDoubleSubmit() {
-  document.querySelectorAll("button[type=submit]").forEach(el => {
-    el.addEventListener("click", () => {
-      el.disabled = true;
+  document.querySelectorAll("form").forEach(form => {
+    form.addEventListener("submit", () => {
+      form.querySelector("button[type=submit]").disabled = true;
     });
   });
 }
