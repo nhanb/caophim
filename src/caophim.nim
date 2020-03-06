@@ -1,17 +1,16 @@
 import options, strformat, strutils
 import jester
 import karax / [karaxdsl, vdom]
-import database, frontend, form_validation
+import database, frontend, form_validation, cpconf
 import storage / [s3]
 
-
 createPicsDirs()
-
 
 let db = getDbConn()
 db.createDb()
 db.seedBoards()
 
+conf = readConfig()
 
 routes:
 
