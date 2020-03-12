@@ -107,8 +107,18 @@ function preventDoubleSubmit() {
 }
 
 window.addEventListener("DOMContentLoaded", event => {
-  toggleableThumbnails();
-  youtubePlayer();
-  pasteablePic();
-  preventDoubleSubmit();
+  // Apply each feature in a try-catch block so one crash doesn't bring the
+  // others down.
+  [
+    toggleableThumbnails,
+    youtubePlayer,
+    pasteablePic,
+    preventDoubleSubmit
+  ].forEach(feature => {
+    try {
+      feature();
+    } catch (error) {
+      console.error(error);
+    }
+  });
 });
