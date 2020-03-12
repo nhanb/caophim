@@ -61,17 +61,22 @@ proc renderContent(
 proc renderLinks(boardSlug: string, threadId: string, linkingIds: seq[int64]): VNode =
   return buildHtml(span(class="links")):
     for id in linkingIds:
-      a(href=fmt"/{boardSlug}/{threadId}/#{id}"): text fmt">>{id}"
+      a(
+        href=fmt"/{boardSlug}/{threadId}/#p{id}",
+        class="quote-link",
+        `quoted-id`= $id,
+      ):
+        text fmt">>{id}"
 
 
 proc renderThread*(db: DbConn, thread: Thread): VNode =
   let picUrl = getPostPicUrl(thread.id, $thread.pic_format)
   let thumbUrl = getPostThumbUrl(thread.id, $thread.pic_format)
   let links = db.getLinks(thread)
-  return buildHtml(tdiv(class="thread", id=thread.id)):
+  return buildHtml(tdiv(class="thread", id=fmt"p{thread.id}")):
     tdiv(class="thread-header"):
-      a(href=fmt"/{thread.boardSlug}/{thread.id}/#{thread.id}", class="permalink"):
-        text "/" & thread.id & "/"
+      a(href=fmt"/{thread.boardSlug}/{thread.id}/#p{thread.id}", class="permalink"):
+        text fmt"#{thread.id}"
       time(datetime=thread.createdAt & "+00:00"): text thread.createdAt & " UTC"
       if thread.numReplies.isSome():
         let num = thread.numReplies.get()
@@ -88,9 +93,9 @@ proc renderThread*(db: DbConn, thread: Thread): VNode =
 
 proc renderReply(db: DbConn, reply: Reply, thread: Thread): VNode =
   let links = db.getLinks(reply)
-  return buildHtml(tdiv(class="reply", id = $reply.id)):
+  return buildHtml(tdiv(class="reply", id=fmt"p{reply.id}")):
     tdiv(class="reply-header"):
-      a(href=fmt"#{reply.id}", class="permalink"):
+      a(href=fmt"#p{reply.id}", class="permalink"):
         text fmt"#{reply.id}"
       time(datetime=reply.createdAt & "+00:00"): text reply.createdAt & " UTC"
       renderLinks(thread.boardSlug, thread.id, links)

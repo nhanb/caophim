@@ -106,6 +106,21 @@ function preventDoubleSubmit() {
   });
 }
 
+function highlightQuotedPostOnHover() {
+  document.querySelectorAll(".quote-link").forEach(link => {
+    const quotedId = link.getAttribute("quoted-id");
+    const quotedEl = document.querySelector(`#p${quotedId}`);
+
+    link.addEventListener("mouseenter", () => {
+      quotedEl.classList.add("quote-highlighted");
+    });
+
+    link.addEventListener("mouseleave", () => {
+      quotedEl.classList.remove("quote-highlighted");
+    });
+  });
+}
+
 window.addEventListener("DOMContentLoaded", event => {
   // Apply each feature in a try-catch block so one crash doesn't bring the
   // others down.
@@ -113,7 +128,8 @@ window.addEventListener("DOMContentLoaded", event => {
     toggleableThumbnails,
     youtubePlayer,
     pasteablePic,
-    preventDoubleSubmit
+    preventDoubleSubmit,
+    highlightQuotedPostOnHover
   ].forEach(feature => {
     try {
       feature();

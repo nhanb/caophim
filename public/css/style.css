@@ -171,6 +171,10 @@ strong,
 .thread:target {
   background-color: lightcyan;
 }
+.reply.quote-highlighted,
+.thread.quote-highlighted {
+  box-shadow: 0px 0px 5px brown;
+}
 
 .op-link::after {
   content: " (OP)";
