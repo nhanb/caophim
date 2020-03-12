@@ -110,6 +110,9 @@ function highlightQuotedPostOnHover() {
   document.querySelectorAll(".quote-link").forEach(link => {
     const quotedId = link.getAttribute("quoted-id");
     const quotedEl = document.querySelector(`#p${quotedId}`);
+    if (!quotedEl) {
+      return;
+    }
 
     link.addEventListener("mouseenter", () => {
       quotedEl.classList.add("quote-highlighted");
