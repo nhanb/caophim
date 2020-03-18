@@ -10,7 +10,7 @@ a:hover {
   text-decoration: underline;
 }
 
-body {
+html {
   font-family: sans-serif;
   font-size: 0.9rem;
   line-height: 1.4;
@@ -61,7 +61,7 @@ form > label {
   display: flex;
   align-items: center;
   justify-content: right;
-  font-size: 90%;
+  font-size: 0.9rem;
 }
 form > button[type="submit"] {
   grid-column: 2/2;
@@ -100,7 +100,7 @@ strong,
   text-decoration: none;
   color: #999;
   text-align: right;
-  font-size: 90%;
+  font-size: 0.9rem;
 }
 .thread-pic-anchor:hover,
 .reply-pic-anchor:hover {
@@ -122,24 +122,23 @@ strong,
 }
 .thread-header .permalink,
 .reply-header .permalink {
-  font-size: 110%;
   margin-right: 5px;
+  font-weight: bold;
+}
+.thread-header time,
+.reply-header time {
+  font-weight: bold;
 }
 .thread-header,
 .reply-header {
-  font-size: 90%;
+  font-size: 0.9rem;
 }
-.thread-header .links,
-.reply-header .links {
-  font-weight: normal;
-}
+
 .thread-header {
   color: brown;
-  font-weight: bold;
 }
 .reply-header {
   color: darkolivegreen;
-  font-weight: bold;
 }
 .thread-content,
 .reply-content {
@@ -194,7 +193,7 @@ strong,
   max-width: 100%;
 }
 .load-player-button {
-  font-size: 90%;
+  font-size: 0.9rem;
   color: darkgoldenrod;
   margin: 0 5px;
   cursor: pointer;
@@ -204,7 +203,7 @@ strong,
 
 /* Phoneposting support: */
 @media (max-width: 550px) {
-  body {
+  html {
     padding: 0;
   }
   h1 {

@@ -76,15 +76,16 @@ proc renderThread*(db: DbConn, thread: Thread): VNode =
   return buildHtml(tdiv(class="thread", id=fmt"p{thread.id}")):
     tdiv(class="thread-header"):
       a(href=fmt"/{thread.boardSlug}/{thread.id}/#p{thread.id}", class="permalink"):
-        text fmt"#{thread.id}"
+        text fmt"Thread #{thread.id}"
       time(datetime=thread.createdAt & "+00:00"): text thread.createdAt & " UTC"
       if thread.numReplies.isSome():
-        let num = thread.numReplies.get()
         text ", "
-        span(class=if num == 0: "" else: "bold"):
-          text fmt"{num} "
-          if num == 1: text "reply"
-          else: text "replies"
+        let num = thread.numReplies.get()
+        let replies_text = if num == 1: "reply" else: "replies"
+        if num == 0:
+          span(class="num-replies"): text fmt"{num} {replies_text}"
+        else:
+          strong(class="num-replies"): text fmt"{num} {replies_text}"
       renderLinks(thread.boardSlug, thread.id, links)
     a(href=picUrl, class="thread-pic-anchor"):
       img(class="thread-pic", src=thumbUrl, thumbsrc=thumbUrl, picsrc=picUrl)
@@ -96,7 +97,7 @@ proc renderReply(db: DbConn, reply: Reply, thread: Thread): VNode =
   return buildHtml(tdiv(class="reply", id=fmt"p{reply.id}")):
     tdiv(class="reply-header"):
       a(href=fmt"#p{reply.id}", class="permalink"):
-        text fmt"#{reply.id}"
+        text fmt"Reply #{reply.id}"
       time(datetime=reply.createdAt & "+00:00"): text reply.createdAt & " UTC"
       renderLinks(thread.boardSlug, thread.id, links)
 
