@@ -48,7 +48,7 @@ textarea {
 form {
   border: var(--border);
   background-color: white;
-  margin: 20px 0;
+  margin: 0;
   padding: 10px;
   max-width: 800px;
 

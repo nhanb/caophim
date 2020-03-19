@@ -48,17 +48,6 @@ routes:
         text " / "
         text fmt" - {board.name}"
 
-      if len(threads) == 0:
-        h2(): text "No threads yet."
-      else:
-        h2():
-          text fmt"Showing "
-          strong(): text fmt"{threads.len}"
-          text if threads.len == 1: " thread" else: " threads"
-          text fmt" in /{slug}/"
-        for thread in threads:
-          db.renderThread(thread)
-
       form(
         class="create-thread-form",
         action=fmt"/{slug}/",
@@ -78,6 +67,17 @@ routes:
           input(`type`="file", name="pic", id="create-thread-pic", required="true")
           img(class="pic-preview", src="")
         button(`type`="submit"): text "Create thread"
+
+      if len(threads) == 0:
+        h2(): text "No threads yet."
+      else:
+        h2():
+          text fmt"Showing "
+          strong(): text fmt"{threads.len}"
+          text if threads.len == 1: " thread" else: " threads"
+          text fmt" in /{slug}/"
+        for thread in threads:
+          db.renderThread(thread)
 
     resp wrapHtml(body, fmt"/{slug}/")
 
