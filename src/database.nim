@@ -167,7 +167,7 @@ proc processContent*(db: DbConn, c: string, postId: int64) =
             var linkType: PostType
             if linkedPostThreadId == "":
               linkType = ThreadType
-              linkHref = fmt"/{r[2]}/{linkedId}/#{linkedId}"
+              linkHref = fmt"/{r[2]}/{linkedId}/#p{linkedId}"
               linkThreadId = linkedId
             else:
               linkType = ReplyType
@@ -175,7 +175,7 @@ proc processContent*(db: DbConn, c: string, postId: int64) =
               let boardSlug = db.getValue(sql"""
               SELECT board_slug FROM thread WHERE id = ?;
               """, linkedPostThreadId)
-              linkHref = fmt"/{boardSlug}/{linkedPostThreadId}/#{linkedId}"
+              linkHref = fmt"/{boardSlug}/{linkedPostThreadId}/#p{linkedId}"
 
             # found: add Link node
             p.pChildren.add(ContentNode(
