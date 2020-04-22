@@ -1,0 +1,35 @@
+# vim: set ft=conf:
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    server_name caophim.imnhan.com;
+
+    include /etc/nginx/snippets/letsencrypt.conf;
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+
+    server_name caophim.imnhan.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+    }
+    client_max_body_size 6M;
+
+    ssl_certificate /etc/letsencrypt/live/caophim.imnhan.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/caophim.imnhan.com/privkey.pem;
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:MozSSL:10m;  # about 40000 sessions
+    ssl_session_tickets off;
+
+    # modern configuration
+    ssl_protocols TLSv1.3;
+    ssl_prefer_server_ciphers off;
+}

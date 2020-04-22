@@ -1,0 +1,14 @@
+[Unit]
+Description=Caophim server
+After=network-online.target
+Wants=network-online.target systemd-networkd-wait-online.service
+
+[Service]
+Restart=on-abnormal
+User=caophim
+Group=caophim
+WorkingDirectory=/home/caophim/caophim-dist
+ExecStart=/home/caophim/caophim-dist/caophim
+
+[Install]
+WantedBy=multi-user.target
