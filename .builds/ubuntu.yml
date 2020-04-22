@@ -4,7 +4,7 @@ secrets:
   - 42bb7f41-956c-4cb8-a685-2fa6e59f5f14
   - 63991352-48fc-43df-acb7-697c7f43c77b
   - 79d42130-a326-4eb1-9195-6034eb5d6d82
-  - 6166d74e-9ca5-43f1-af92-1254f82c747f
+  - 7b2b6c77-4ce6-4526-a4f8-d28783fa6d95
 
 packages:
   - curl
@@ -65,8 +65,9 @@ tasks:
       #hub release create -a caophim-linux64.tar.gz "$TAG" -m "$TAG"
 
       cd caophim
-      scp -i ~/.ssh/6166d74e-9ca5-43f1-af92-1254f82c747f caophim-linux64.tar.gz ubuntu@caophim.net:/home/ubuntu/
-      ssh -i ~/.ssh/6166d74e-9ca5-43f1-af92-1254f82c747f ubuntu@caophim.net "
+      echo "caophim.imnhan.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAQ1jWerB3GUGRhaZZzgpRyCSwo7PRi1cPbokaAwwsAKts1dkXSdCtR9xoTXKdvhASX5xafdzHZqbyFzpc0RleM=" >> ~/.ssh/known_hosts
+      scp -i ~/.ssh/7b2b6c77-4ce6-4526-a4f8-d28783fa6d95 caophim-linux64.tar.gz caophim@caophim.imnhan.com:/home/caophim/
+      ssh -i ~/.ssh/7b2b6c77-4ce6-4526-a4f8-d28783fa6d95 caophim@caophim.imnhan.com "
         #wget -O caophim-linux64.tar.gz https://github.com/nhanb/caophim/releases/download/${TAG}/caophim-linux64.tar.gz
         tar -xf caophim-linux64.tar.gz
         sudo systemctl restart caophim
