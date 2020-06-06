@@ -1,0 +1,3 @@
+caophim.net, caophim.imnhan.com {
+    reverse_proxy localhost:5000
+}

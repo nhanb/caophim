@@ -91,26 +91,6 @@ systemctl enable caophim
 systemctl start caophim
 # site should now be live at port 5000. Let's move on to nginx & TLS
 
-# [add certbot ppa]
-apt install nginx certbot
-curl 'https://git.sr.ht/~nhanb/caophim/blob/master/ops/caophim.nginx' \
-     > /etc/nginx/sites-available/caophim
-curl 'https://git.sr.ht/~nhanb/caophim/blob/master/ops/caophim-acme-only.nginx' \
-     > /etc/nginx/sites-available/caophim-acme-only
-curl 'https://git.sr.ht/~nhanb/caophim/blob/master/ops/letsencrypt.nginx' \
-     > /etc/nginx/snippets/letsencrypt.conf
-rm -f /etc/nginx/sites-enabled/default
-# At this point we don't have tls certs yet so the full caophim nginx
-# config won't work, therefore use a minimal config that only serves
-# /.well-known/acme-challenge/ to get certs for the first time.
-ln -s -f /etc/nginx/sites-available/caophim-acme-only /etc/nginx/sites-enabled/caophim
-systemctl restart nginx
-mkdir -p /var/www/letsencrypt
-# this will create cert files in /etc/letsencrypt/ - see nginx config.
-certbot certonly \
-  --webroot --webroot-path /var/www/letsencrypt \
-  --email caophim@imnhan.com \
-  -d caophim.imnhan.com
-# Now that we have the cert files in place, serve the full caophim site
-ln -s -f /etc/nginx/sites-available/caophim /etc/nginx/sites-enabled/caophim
-systemctl restart nginx
+# [install caddy v2]
+# [either cp or symlink from ./ops/caophim.caddy to /etc/caddy/sites-enabled/caophim]
+systemctl restart caddy
