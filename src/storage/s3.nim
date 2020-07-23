@@ -14,7 +14,7 @@ proc uploadPicAndThumb(filename: string, format: string): int =
   # use the REST API properly with an asynchttpclient.
   let uploadCmd = fmt"""
     export AWS_SHARED_CREDENTIALS_FILE=aws/credentials && \
-    aws s3 --endpoint-url='https://s3.{conf.s3.region}.{conf.s3.host}' \
+    aws s3 --endpoint-url='https://{conf.s3.endpoint}' \
     cp '{PICS_DIR}/' 's3://{conf.s3.bucket}/' \
     --recursive --exclude="*" --include="{filename}.*{format}" \
     --content-type image/{format}"""
@@ -41,8 +41,8 @@ proc savePic*(blob: string, filename: string, format: string) {.async} =
 
 
 proc getPostPicUrl*(postId: string, picFormat: string): string =
-  return fmt"https://{conf.s3.bucket}/{postId}.{picFormat}"
+  return fmt"https://{conf.s3.public_hostname}/{postId}.{picFormat}"
 
 
 proc getPostThumbUrl*(postId: string, picFormat: string): string =
-  return fmt"https://{conf.s3.bucket}/{postId}.thumb.{picFormat}"
+  return fmt"https://{conf.s3.public_hostname}/{postId}.thumb.{picFormat}"

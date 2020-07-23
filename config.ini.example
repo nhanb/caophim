@@ -1,4 +1,4 @@
 [s3]
-bucket = "p.caophim.net"
-region = "us-west-1"
-host = "amazonaws.com"
+bucket = "caophim-prod"
+endpoint = "caophim-prod.s3-us-west-2.amazonaws.com"
+public_hostname = "p.caophim.imnhan.com"

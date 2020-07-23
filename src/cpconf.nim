@@ -3,8 +3,8 @@ import parsecfg
 type
   S3Conf* = object
     bucket*: string
-    region*: string
-    host*: string
+    endpoint*: string
+    public_hostname*: string
 
   CaophimConf* = object
     s3*: S3Conf
@@ -17,8 +17,8 @@ proc readConfig*(): CaophimConf =
 
   let s3 = S3Conf(
     bucket: dict.getSectionValue("s3", "bucket"),
-    region: dict.getSectionValue("s3", "region"),
-    host: dict.getSectionValue("s3", "host"),
+    endpoint: dict.getSectionValue("s3", "endpoint"),
+    public_hostname: dict.getSectionValue("s3", "public_hostname"),
   )
 
   return CaophimConf(
