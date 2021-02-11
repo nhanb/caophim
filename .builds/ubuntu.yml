@@ -1,8 +1,6 @@
 image: ubuntu/bionic
 
 secrets:
-  - 42bb7f41-956c-4cb8-a685-2fa6e59f5f14
-  - 63991352-48fc-43df-acb7-697c7f43c77b
   - 79d42130-a326-4eb1-9195-6034eb5d6d82
   - 7b2b6c77-4ce6-4526-a4f8-d28783fa6d95
 
@@ -11,14 +9,6 @@ packages:
   - unzip
 
 tasks:
-  - mirror-to-github: |
-      cd ~/caophim
-      mkdir -p ~/.ssh
-      echo -e "\nHost github.com\n  IdentityFile /home/build/.ssh/42bb7f41-956c-4cb8-a685-2fa6e59f5f14\n  IdentitiesOnly yes\n  BatchMode yes" >> ~/.ssh/config
-      echo "github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==" >> ~/.ssh/known_hosts
-      git remote add github git@github.com:nhanb/caophim.git
-      git push -f github '*:*' --follow-tags
-
   - build: |
       curl -L 'https://github.com/nim-lang/nightlies/releases/download/2020-02-24-devel-3dad130/nim-1.1.1-linux_x64.tar.xz' -o nim.tar.xz
       tar -xf nim.tar.xz
@@ -63,6 +53,8 @@ tasks:
       #export TAG="v0.$(date +'%Y.%m.%d-%H%M')"
       # this used to work but now doesn't for some reason:
       #hub release create -a caophim-linux64.tar.gz "$TAG" -m "$TAG"
+      # I also removed the hub credentials secret on sr.ht.
+      # If I ever want to revisit this (unlikely), remember to add that back.
 
       cd caophim
       echo "caophim.imnhan.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAQ1jWerB3GUGRhaZZzgpRyCSwo7PRi1cPbokaAwwsAKts1dkXSdCtR9xoTXKdvhASX5xafdzHZqbyFzpc0RleM=" >> ~/.ssh/known_hosts
