@@ -1,3 +1,7 @@
+**NOTE: this is on indefinite hiatus**, mostly thanks to my disillusionment
+with the current state of nim. However, it's still live at
+https://caophim.imnhan.com if you're curious.
+
 My attempt to build a simple imageboard.
 
 Goals:
@@ -34,36 +38,19 @@ problem with sqlite](https://www.sqlite.org/np1queryprob.html).
 
 ## Server setup
 
+Targets Debian 11 (bulleye).
+
 ### Dependencies:
 
-ImageMagick: the version that comes with Ubuntu 18.04 doesn't support webp
-(even with libwebp-dev installed) for some reason. Compile from source like
-this:
-
 ```sh
-sudo apt install libwebp-dev
-sudo apt build-dep imagemagick
-
-wget 'https://github.com/ImageMagick/ImageMagick/archive/7.0.9-27.tar.gz'
-tar -xf 7.0.9-27.tar.gz
-cd ImageMagick-7.0.9-27
-./configure
-make
-sudo make install
+sudo apt install imagemagick awscli
 ```
-
-Now run `magick -version`. If it errors out trying to load some library, try
-running `ldconfig /usr/local/lib`.
-
-I'm _really really_ tempted to just spin up an Arch server and be done with it.
 
 ### S3:
 
 - create your bucket and access id - secret pair
 - `cp aws/credentials-example aws/credentials`
 - fill key & secret in credentials file
-- install aws-cli on server
-
 - `cp config.ini.example config.ini`
 - fill s3 configs
 
@@ -72,16 +59,21 @@ values from config.ini.
 
 ## How I'm running it so far
 
-I should write up an ansible playbook at some point...
+~~I should write up an ansible playbook at some point...~~
+I have a private [pyinfra](https://pyinfra.com/) setup that works alright,
+though I don't have any plans to open source it, since that box is also hosting
+some other stuff.
+
+Anyway, here are the manual steps:
 
 ```sh
 adduser --disabled-password caophim
 # [gen key, add pubkey to /home/caophim/.ssh/authorized_keys, chmod 600]
 su caophim
-wget '<caophim-linux64.tar.gz url>'
+wget 'https://github.com/nhanb/caophim/releases/download/v0.1.1/caophim-linux64.tar.gz'
 tar -xf caophim-linux64.tar.gz
-# [populate config.ini, aws/credentials]
 cd caophim-dist
+# [populate config.ini, aws/credentials]
 
 # Setup systemd service
 # as root
@@ -89,8 +81,9 @@ curl 'https://git.sr.ht/~nhanb/caophim/blob/master/ops/caophim.service' \
      > /etc/systemd/system/caophim.service
 systemctl enable caophim
 systemctl start caophim
-# site should now be live at port 5000. Let's move on to nginx & TLS
+# site should now be live at port 5000.
 
+# Now you need some HTTP reverse proxy that handles TLS. I recommend Caddy:
 # [install caddy v2]
 # [either cp or symlink from ./ops/caophim.caddy to /etc/caddy/sites-enabled/caophim]
 systemctl restart caddy
