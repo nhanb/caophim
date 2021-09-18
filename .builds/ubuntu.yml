@@ -56,14 +56,19 @@ tasks:
       # I also removed the hub credentials secret on sr.ht.
       # If I ever want to revisit this (unlikely), remember to add that back.
 
-      cd caophim
-      echo "caophim.imnhan.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAQ1jWerB3GUGRhaZZzgpRyCSwo7PRi1cPbokaAwwsAKts1dkXSdCtR9xoTXKdvhASX5xafdzHZqbyFzpc0RleM=" >> ~/.ssh/known_hosts
-      scp -i ~/.ssh/7b2b6c77-4ce6-4526-a4f8-d28783fa6d95 caophim-linux64.tar.gz caophim@caophim.imnhan.com:/home/caophim/
-      ssh -i ~/.ssh/7b2b6c77-4ce6-4526-a4f8-d28783fa6d95 caophim@caophim.imnhan.com "
-        #wget -O caophim-linux64.tar.gz https://github.com/nhanb/caophim/releases/download/${TAG}/caophim-linux64.tar.gz
-        tar -xf caophim-linux64.tar.gz
-        sudo systemctl restart caophim
-      "
+      echo "Nope."
+      # Now that I've moved caophim to a new server that only allows ssh access
+      # from a tailscale network, the builds runner should also need to be set
+      # up as an ephemeral tailscale node, which I'm not going to bother.
+
+      # cd caophim
+      # echo "caophim.imnhan.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAQ1jWerB3GUGRhaZZzgpRyCSwo7PRi1cPbokaAwwsAKts1dkXSdCtR9xoTXKdvhASX5xafdzHZqbyFzpc0RleM=" >> ~/.ssh/known_hosts
+      # scp -i ~/.ssh/7b2b6c77-4ce6-4526-a4f8-d28783fa6d95 caophim-linux64.tar.gz caophim@caophim.imnhan.com:/home/caophim/
+      # ssh -i ~/.ssh/7b2b6c77-4ce6-4526-a4f8-d28783fa6d95 caophim@caophim.imnhan.com "
+      #   #wget -O caophim-linux64.tar.gz https://github.com/nhanb/caophim/releases/download/${TAG}/caophim-linux64.tar.gz
+      #   tar -xf caophim-linux64.tar.gz
+      #   sudo systemctl restart caophim
+      # "
 
 artifacts:
   - caophim/caophim-linux64.tar.gz
