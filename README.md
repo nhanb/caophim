@@ -1,6 +1,7 @@
 **NOTE: this is on indefinite hiatus**, mostly thanks to my disillusionment
 with the current state of nim. However, it's still live at
-https://caophim.imnhan.com if you're curious.
+https://caophim.imnhan.com if you're curious. It's read-only now because some
+dumbass kept spamming the N word there for some reason.
 
 My attempt to build a simple imageboard.
 
@@ -38,7 +39,7 @@ problem with sqlite](https://www.sqlite.org/np1queryprob.html).
 
 ## Server setup
 
-Targets Debian 11 (bulleye).
+Targets Debian 11 (bullseye).
 
 ### Dependencies:
 
