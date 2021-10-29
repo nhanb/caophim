@@ -1,7 +1,6 @@
 **NOTE: this is on indefinite hiatus**, mostly thanks to my disillusionment
 with the current state of nim. However, it's still live at
-https://caophim.imnhan.com if you're curious. It's read-only now because some
-dumbass kept spamming the N word there for some reason.
+https://caophim.imnhan.com if you're curious.
 
 My attempt to build a simple imageboard.
 

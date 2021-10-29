@@ -1,3 +1,16 @@
-caophim.net, caophim.imnhan.com {
+caophim.imnhan.com {
     reverse_proxy localhost:5000
+
+    #@post {
+    #    method POST
+    #}
+    #rewrite @post /post_not_allowed
+    #respond /post_not_allowed "This instance is read-only" 405
+
+    log {
+        format single_field common_log
+    }
+}
+caophim.net {
+    redir https://caophim.imnhan.com{uri} permanent
 }
