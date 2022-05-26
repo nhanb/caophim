@@ -17,6 +17,7 @@ type
     content*: string
 
   UnsupportedImageFormat* = object of Exception
+  IsSpam* = object of Exception
 
 
 proc cleanUp(content: string): string =
@@ -41,6 +42,7 @@ proc validateThreadFormData*(request: Request): ThreadFormData =
 
 proc validateReplyFormData*(request: Request): ReplyFormData =
   var picOpt: Option[Pic]
+  var content: string
 
   if request.formData["pic"].body == "":
     picOpt = none(Pic)
@@ -52,7 +54,11 @@ proc validateReplyFormData*(request: Request): ReplyFormData =
       raise newException(UnsupportedImageFormat, "")
     picOpt = some(Pic(blob: picBlob, format: picFormat))
 
+  content = cleanUp(request.formData["content"].body)
+  if content.contains("newfasttadalafil"):
+    raise newException(IsSpam, "")
+
   return ReplyFormData(
     pic: picOpt,
-    content: cleanUp(request.formData["content"].body),
+    content: content,
   )
