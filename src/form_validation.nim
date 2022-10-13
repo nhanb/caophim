@@ -55,7 +55,7 @@ proc validateReplyFormData*(request: Request): ReplyFormData =
     picOpt = some(Pic(blob: picBlob, format: picFormat))
 
   content = cleanUp(request.formData["content"].body)
-  if content.contains("newfasttadalafil"):
+  if content.contains("newfasttadalafil") or content.contains("<a href="):
     raise newException(IsSpam, "")
 
   return ReplyFormData(
