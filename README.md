@@ -1,6 +1,5 @@
 **NOTE: this is on indefinite hiatus**, mostly thanks to my disillusionment
-with the current state of nim. However, it's still live at
-https://caophim.imnhan.com if you're curious.
+with the current state of nim.
 
 My attempt to build a simple imageboard.
 
@@ -16,6 +15,8 @@ Goals:
 - Simple (and hopefully fun) to develop: prioritize correctness & simplicity
   over performance in general. Nim + sqlite3 is plenty fast already, and no
   your shitty Mongolian basket weaving forum does not need to be "web scale".
+
+![](screenshot.png)
 
 # Dev
 
